@@ -1,0 +1,35 @@
+<mujoco model="edificio_simple">
+  <option gravity="0 0 -9.81"/>
+
+  <worldbody>
+    <light diffuse=".6 .6 .6" pos="0 0 5" dir="0 0 -1"/>
+
+    <!-- Piso -->
+    <geom type="plane" size="5 5 0.1" rgba="0.8 0.8 0.8 1"/>
+
+    <!-- Paredes (forman una habitación) -->
+    <geom type="box" pos="0 5 1" size="5 0.1 1" rgba="0.6 0.6 0.9 1"/>
+    <geom type="box" pos="0 -5 1" size="5 0.1 1" rgba="0.6 0.6 0.9 1"/>
+    <geom type="box" pos="5 0 1" size="0.1 5 1" rgba="0.6 0.6 0.9 1"/>
+    <geom type="box" pos="-5 0 1" size="0.1 5 1" rgba="0.6 0.6 0.9 1"/>
+
+    <!-- "Daño" simulado: escombro en el piso -->
+    <geom type="box" pos="2 2 0.15" size="0.3 0.3 0.15" rgba="0.8 0.2 0.2 1"/>
+
+    <!-- Robot con movimiento en el plano -->
+    <body name="robot" pos="0 0 0.2">
+      <joint name="pos_x" type="slide" axis="1 0 0"/>
+      <joint name="pos_y" type="slide" axis="0 1 0"/>
+      <joint name="giro" type="hinge" axis="0 0 1"/>
+      <geom type="box" size="0.3 0.3 0.15" rgba="0.2 0.7 0.2 1"/>
+      <camera name="camara_robot" pos="0.3 0 0.1" xyaxes="0 -1 0 0 0 1"/>
+    </body>
+
+  </worldbody>
+
+  <actuator>
+    <motor joint="pos_x" gear="5"/>
+    <motor joint="pos_y" gear="5"/>
+    <motor joint="giro" gear="2"/>
+  </actuator>
+</mujoco>
