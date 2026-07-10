@@ -1,0 +1,9 @@
+mujoco
+mujoco-python-viewer
+gymnasium
+numpy
+scipy
+PyOpenGL
+glfw
+imageio
+matplotlib
