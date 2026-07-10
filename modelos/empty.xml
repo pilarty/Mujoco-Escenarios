@@ -1,0 +1,109 @@
+<mujoco model="empty_world">
+  <!-- 
+    ========================================
+    ESCENARIO VACÍO - TEMPLATE BASE
+    ========================================
+    
+    Este archivo representa el escenario base del proyecto.
+    
+    IMPORTANTE - Rutas relativas:
+    - Este archivo se carga desde modelos/ pero las rutas deben ser 
+      relativas a unitree_g1/ debido a cómo MuJoCo resuelve meshdir.
+    - launch.py maneja el cambio de directorio automáticamente.
+    
+    Arquitectura:
+    - Robot: unitree_g1/g1.xml (SOLO LECTURA - nunca modificar)
+    - Escenarios: modelos/*.xml (desarrollo activo)
+  -->
+
+  <!-- Incluir el robot Unitree G1 -->
+  <include file="g1.xml"/>
+
+  <!-- ========================================
+       CONFIGURACIÓN VISUAL
+       ======================================== -->
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0.9 0.9 0.9"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-15"/>
+    <quality shadowsize="4096"/>
+    <map force="0.1" zfar="30"/>
+  </visual>
+
+  <!-- ========================================
+       ASSETS: TEXTURAS Y MATERIALES
+       ======================================== -->
+  <asset>
+    <texture type="skybox" builtin="gradient" 
+             rgb1="0.4 0.6 0.8" 
+             rgb2="0.1 0.1 0.15" 
+             width="512" height="3072"/>
+    
+    <texture type="2d" name="groundplane" builtin="checker" 
+             mark="edge" 
+             rgb1="0.25 0.25 0.25" 
+             rgb2="0.3 0.3 0.3"
+             markrgb="0.8 0.8 0.8" 
+             width="300" height="300"/>
+    
+    <material name="groundplane" 
+              texture="groundplane" 
+              texuniform="true" 
+              texrepeat="8 8" 
+              reflectance="0.1"/>
+  </asset>
+
+  <!-- ========================================
+       WORLDBODY: ELEMENTOS DEL MUNDO
+       ======================================== -->
+  <worldbody>
+    <!-- Luz que sigue al robot -->
+    <light name="spotlight" 
+           mode="targetbodycom" 
+           target="pelvis" 
+           pos="0 -1 4" 
+           diffuse="1 1 1"/>
+    
+    <!-- Luz ambiental -->
+    <light name="ambient_light" 
+           directional="true" 
+           pos="2 2 4" 
+           dir="0 0 -1" 
+           diffuse="0.5 0.5 0.5"/>
+    
+    <!-- Suelo infinito -->
+    <geom name="floor" 
+          type="plane" 
+          size="0 0 0.05" 
+          material="groundplane"
+          friction="1 0.005 0.0001"/>
+    
+    <!-- Cámaras -->
+    <camera name="fixed_cam" 
+            pos="3 -3 2" 
+            xyaxes="0.7 0.7 0 -0.3 0.3 1" 
+            mode="targetbodycom" 
+            target="pelvis"/>
+    
+    <camera name="front_cam" 
+            pos="3 0 1.5" 
+            xyaxes="0 1 0 0 0 1" 
+            mode="targetbodycom" 
+            target="pelvis"/>
+    
+    <camera name="top_cam" 
+            pos="0 0 5" 
+            xyaxes="1 0 0 0 1 0" 
+            mode="targetbodycom" 
+            target="pelvis"/>
+  </worldbody>
+
+  <!-- 
+    Para crear nuevos escenarios:
+    1. Duplicar este archivo (ej: room.xml, corridor.xml)
+    2. Modificar solo la sección worldbody
+    3. Agregar geometrías (paredes, obstáculos, etc.)
+    4. Actualizar launch.py con el nuevo nombre de archivo
+  -->
+
+</mujoco>
