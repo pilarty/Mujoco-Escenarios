@@ -1,0 +1,15 @@
+<mujoco>
+  <compiler meshdir="meshes/" texturedir="meshes/"/>
+
+  <asset>
+    <mesh name="mi_malla" file="cuarto.obj"/>
+    <texture name="tex" type="2d" file="texture_pbr_20250901.png"/>
+    <material name="mat" texture="tex"/>
+  </asset>
+
+  <worldbody>
+    <body name="objeto" pos="0 0 0">
+      <geom type="mesh" mesh="mi_malla" material="mat"/>
+    </body>
+  </worldbody>
+</mujoco>
