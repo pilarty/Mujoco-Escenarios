@@ -31,10 +31,7 @@ xml_content = f"""
 </mujoco>
 """
 
-# Carga la escena (robot + escenario). Se hace un chdir temporal a unitree_g1/
-# para que el meshdir="assets" del robot resuelva bien las rutas de sus propias mallas.
 original_dir = os.getcwd()
-
 try:
     os.chdir(UNITREE_DIR)
     escena = mujoco.MjModel.from_xml_string(xml_content)
@@ -48,10 +45,7 @@ renderer = mujoco.Renderer(escena, 480, 640)
 frame = 0
 vel = 0.05
 vel_giro = 0.03
-
 yaw = 0.0
-
-# Simulación con visor interactivo
 
 with mujoco.viewer.launch_passive(escena, data) as viewer:
     viewer.cam.lookat[:] = data.qpos[:3]
@@ -62,18 +56,18 @@ with mujoco.viewer.launch_passive(escena, data) as viewer:
     while viewer.is_running():
 
         # Girar
-        if keyboard.is_pressed("a"):
+        if keyboard.is_pressed("ctrl+left"):
             yaw += vel_giro
 
-        if keyboard.is_pressed("d"):
+        if keyboard.is_pressed("ctrl+right"):
             yaw -= vel_giro
 
         # Avanzar / retroceder
-        if keyboard.is_pressed("w"):
+        if keyboard.is_pressed("ctrl+up"):
             data.qpos[0] += vel * math.cos(yaw)
             data.qpos[1] += vel * math.sin(yaw)
 
-        if keyboard.is_pressed("s"):
+        if keyboard.is_pressed("ctrl+down"):
             data.qpos[0] -= vel * math.cos(yaw)
             data.qpos[1] -= vel * math.sin(yaw)
 
@@ -86,25 +80,20 @@ with mujoco.viewer.launch_passive(escena, data) as viewer:
 
         data.qpos[3:7] = quat
 
-        mujoco.mj_forward(escena, data)
-        mujoco.mj_step(escena, data)
+        mujoco.mj_step(escena, data)  # mj_forward no hace falta, mj_step ya lo incluye
 
         if frame % 300 == 0:
             renderer.update_scene(data, camera="head_camera")
             imagen = renderer.render()
 
             img = Image.fromarray(imagen)
+            img.save(os.path.join(CAPTURAS_DIR, f"frame_{frame:05d}.png"))
 
-            img.save(
-                os.path.join(CAPTURAS_DIR, f"frame_{frame:05d}.png")
-            )
-            img = img.resize((224, 224))
+            img_resized = img.resize((224, 224))
+            img_resized = np.array(img_resized)
+            img_resized = np.expand_dims(img_resized, axis=0)
 
-            img = np.array(img)
-            img = np.expand_dims(img, axis=0)
-
-            pred_prob = modelo.predict(img, verbose=0)[0][0]
-
+            pred_prob = modelo.predict(img_resized, verbose=0)[0][0]
             pred_label = "damaged" if pred_prob < 0.5 else "undamaged"
 
             print(f"Frame {frame}: {pred_label} (prob undamaged: {pred_prob:.4f})")
