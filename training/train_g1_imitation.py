@@ -25,6 +25,8 @@ from loco_mujoco import ImitationFactory
 from loco_mujoco.algorithms import PPOJax
 from loco_mujoco.task_factories import CustomDatasetConf, DefaultDatasetConf, LAFAN1DatasetConf
 from loco_mujoco.trajectory import Trajectory
+from loco_mujoco.datasets.humanoids.LAFAN1.load import extend_motion
+from loco_mujoco.smpl.retargeting import load_robot_conf_file
 
 
 FALLBACK_TASK_PROBES = [
@@ -58,6 +60,14 @@ LAFAN1_ALIASES = {
     "walk": "walk1_subject1",
     "run": "run1_subject2",
 }
+
+SITES_FOR_MIMIC = [
+    "upper_body_mimic",
+    "left_hand_mimic",
+    "left_foot_mimic",
+    "right_hand_mimic",
+    "right_foot_mimic",
+]
 
 _HF_SSL_CONFIGURED = False
 
@@ -127,6 +137,24 @@ def normalize_lafan1_task(task):
     return LAFAN1_ALIASES.get(task, task).removesuffix(".csv").removesuffix(".npz")
 
 
+def base_env_name(env_name):
+    return env_name.replace("Mjx", "", 1) if env_name.startswith("Mjx") else env_name
+
+
+def load_local_trajectory(env_name, local_npz):
+    traj = Trajectory.load(local_npz)
+    if not traj.data.is_complete:
+        source_env_name = base_env_name(env_name)
+        print("Trayectoria local incompleta: calculando datos derivados con MuJoCo...", flush=True)
+        traj = extend_motion(
+            source_env_name,
+            load_robot_conf_file(source_env_name),
+            traj,
+            replace_qvel_with_finite_diff=False,
+        )
+    return traj
+
+
 def make_config(args, dataset, task):
     task_factory_params = {}
     if dataset == "local":
@@ -153,7 +181,18 @@ def make_config(args, dataset, task):
                 "headless": True,
                 "horizon": 1000,
                 "goal_type": "GoalTrajMimic",
+                "goal_params": {
+                    "visualize_goal": True,
+                },
                 "reward_type": "MimicReward",
+                "reward_params": {
+                    "qpos_w_sum": 0.4,
+                    "qvel_w_sum": 0.2,
+                    "rpos_w_sum": 0.5,
+                    "rquat_w_sum": 0.3,
+                    "rvel_w_sum": 0.1,
+                    "sites_for_mimic": SITES_FOR_MIMIC,
+                },
             },
             "hidden_layers": [512, 256],
             "lr": 1e-4,
@@ -189,14 +228,23 @@ def make_config(args, dataset, task):
 def make_env(args, dataset, task):
     configure_huggingface_ssl()
     if dataset == "local":
-        traj = Trajectory.load(args.local_npz)
+        traj = load_local_trajectory(args.env, args.local_npz)
         return ImitationFactory.make(
             env_name=args.env,
             custom_dataset_conf=CustomDatasetConf(traj=traj),
             headless=True,
             horizon=1000,
             goal_type="GoalTrajMimic",
+            goal_params={"visualize_goal": True},
             reward_type="MimicReward",
+            reward_params={
+                "qpos_w_sum": 0.4,
+                "qvel_w_sum": 0.2,
+                "rpos_w_sum": 0.5,
+                "rquat_w_sum": 0.3,
+                "rvel_w_sum": 0.1,
+                "sites_for_mimic": SITES_FOR_MIMIC,
+            },
         )
 
     if dataset == "lafan1":
@@ -206,7 +254,16 @@ def make_env(args, dataset, task):
             headless=True,
             horizon=1000,
             goal_type="GoalTrajMimic",
+            goal_params={"visualize_goal": True},
             reward_type="MimicReward",
+            reward_params={
+                "qpos_w_sum": 0.4,
+                "qvel_w_sum": 0.2,
+                "rpos_w_sum": 0.5,
+                "rquat_w_sum": 0.3,
+                "rvel_w_sum": 0.1,
+                "sites_for_mimic": SITES_FOR_MIMIC,
+            },
         )
 
     dataset_conf = DefaultDatasetConf(task=task, dataset_type="mocap")
@@ -216,7 +273,16 @@ def make_env(args, dataset, task):
         headless=True,
         horizon=1000,
         goal_type="GoalTrajMimic",
+        goal_params={"visualize_goal": True},
         reward_type="MimicReward",
+        reward_params={
+            "qpos_w_sum": 0.4,
+            "qvel_w_sum": 0.2,
+            "rpos_w_sum": 0.5,
+            "rquat_w_sum": 0.3,
+            "rvel_w_sum": 0.1,
+            "sites_for_mimic": SITES_FOR_MIMIC,
+        },
     )
 
 

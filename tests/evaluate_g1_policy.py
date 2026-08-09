@@ -2,6 +2,7 @@
 Fase 4: Evaluación de Política Entrenada
 Visualiza el robot G1 caminando con la política entrenada
 """
+import argparse
 import ssl
 import time
 import os
@@ -16,6 +17,11 @@ from loco_mujoco import RLFactory, TaskFactory
 from loco_mujoco.algorithms import PPOJax
 from loco_mujoco.task_factories import CustomDatasetConf
 from loco_mujoco.trajectory import Trajectory
+from loco_mujoco.datasets.humanoids.LAFAN1.load import extend_motion
+from loco_mujoco.smpl.retargeting import load_robot_conf_file
+
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def unique_paths(paths):
@@ -37,31 +43,88 @@ def build_policy_paths():
     return unique_paths(imitation_paths)
 
 
-def build_eval_env(agent_conf):
+def base_env_name(env_name):
+    return env_name.replace("Mjx", "", 1) if isinstance(env_name, str) and env_name.startswith("Mjx") else env_name
+
+
+def resolve_local_npz(local_npz):
+    """Resolve a dataset path saved in an older checkpoint config."""
+    candidates = []
+    if os.path.isabs(local_npz):
+        candidates.append(local_npz)
+    else:
+        candidates.extend([
+            local_npz,
+            os.path.join(PROJECT_ROOT, local_npz),
+        ])
+
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+
+    filename = os.path.basename(local_npz)
+    for root, _, files in os.walk(os.path.join(PROJECT_ROOT, "training")):
+        if filename in files:
+            return os.path.join(root, filename)
+
+    return local_npz
+
+
+def load_local_trajectory(env_name, local_npz):
+    local_npz = resolve_local_npz(local_npz)
+    traj = Trajectory.load(local_npz)
+    if not traj.data.is_complete:
+        source_env_name = base_env_name(env_name)
+        traj = extend_motion(
+            source_env_name,
+            load_robot_conf_file(source_env_name),
+            traj,
+            replace_qvel_with_finite_diff=False,
+        )
+    return traj
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Evalua una politica entrenada de Unitree G1.")
+    parser.add_argument("--steps", type=int, default=200, help="Cantidad de steps de evaluacion.")
+    parser.add_argument("--sleep", type=float, default=0.02, help="Pausa entre steps cuando hay render.")
+    parser.add_argument("--no-render", action="store_true", help="Ejecuta la evaluacion sin abrir MuJoCo viewer.")
+    parser.add_argument("--render-every", type=int, default=1, help="Renderiza cada N steps.")
+    return parser.parse_args()
+
+
+def build_eval_env(agent_conf, render=True):
     """Reconstruye el ambiente desde la config del agente y prioriza MuJoCo."""
     config = getattr(agent_conf, "config", None)
     if config is None or not hasattr(config, "experiment"):
-        return RLFactory.make("UnitreeG1", horizon=1000, headless=False)
+        return RLFactory.make("UnitreeG1", horizon=1000, headless=not render)
 
     eval_config = OmegaConf.create(OmegaConf.to_container(config, resolve=True))
     OmegaConf.set_struct(eval_config, False)
 
-    env_params = eval_config.experiment.env_params
+    env_params = OmegaConf.to_container(eval_config.experiment.env_params, resolve=True)
     env_name = env_params.get("env_name", "UnitreeG1")
     if isinstance(env_name, str) and env_name.startswith("Mjx"):
         env_params["env_name"] = env_name.replace("Mjx", "", 1)
-    env_params["headless"] = False
+    env_params["headless"] = not render
+    if "goal_params" in env_params:
+        env_params["goal_params"]["visualize_goal"] = False
 
     task_factory = eval_config.experiment.get("task_factory", {"name": "RLFactory", "params": {}})
     factory_name = task_factory.get("name", "RLFactory")
-    factory_params = task_factory.get("params", {}) or {}
+    factory_params = OmegaConf.to_container(task_factory.get("params", {}) or {}, resolve=True)
     local_npz = factory_params.pop("local_npz", None)
     if local_npz:
-        factory_params["custom_dataset_conf"] = CustomDatasetConf(traj=Trajectory.load(local_npz))
+        factory_params["custom_dataset_conf"] = CustomDatasetConf(
+            traj=load_local_trajectory(env_params.get("env_name", "UnitreeG1"), local_npz)
+        )
     factory = TaskFactory.get_factory_cls(factory_name)
     return factory.make(**env_params, **factory_params)
 
 def main():
+    args = parse_args()
+    render = not args.no_render
+
     print("=" * 70)
     print("FASE 4: EVALUACIÓN DE POLÍTICA ENTRENADA")
     print("=" * 70)
@@ -116,8 +179,9 @@ def main():
         print("🎯 Modelo: política entrenada")
     
     try:
-        env = build_eval_env(agent_conf)
-        print(f"\n✓ Ambiente de evaluación creado: {type(env).__name__} (MuJoCo visual)")
+        env = build_eval_env(agent_conf, render=render)
+        mode = "MuJoCo visual" if render else "headless"
+        print(f"\n✓ Ambiente de evaluación creado: {type(env).__name__} ({mode})")
     except Exception as e:
         print(f"✗ Error al crear ambiente: {e}")
         return
@@ -125,13 +189,16 @@ def main():
     # Evaluar política
     print("\n3. EVALUANDO POLÍTICA")
     print("=" * 70)
-    print("\n📺 Se abrirá una ventana de MuJoCo mostrando el robot")
-    print("   caminando con la política entrenada.\n")
-    print("Controles:")
-    print("  • Click izquierdo + arrastrar: rotar cámara")
-    print("  • Click derecho + arrastrar: mover cámara")
-    print("  • IMPORTANTE: NO hagas scroll (causa el bug que viste antes)")
-    print("\nLa evaluación correrá automáticamente por 1000 steps")
+    if render:
+        print("\n📺 Se abrirá una ventana de MuJoCo mostrando el robot")
+        print("   caminando con la política entrenada.\n")
+        print("Controles:")
+        print("  • Click izquierdo + arrastrar: rotar cámara")
+        print("  • Click derecho + arrastrar: mover cámara")
+        print("  • IMPORTANTE: NO hagas scroll (causa el bug que viste antes)")
+    else:
+        print("\nEjecutando sin render para aislar simulacion/politica del viewer.")
+    print(f"\nLa evaluación correrá automáticamente por {args.steps} steps")
     print("Presiona Ctrl+C si quieres detener antes\n")
     print("=" * 70)
     
@@ -176,7 +243,7 @@ def main():
         
         print(f"   Episodio {episode}")
         
-        for step in range(1000):
+        for step in range(args.steps):
             # Obtener acción de la política ENTRENADA
             action = get_action(obs)
             
@@ -189,18 +256,19 @@ def main():
                 obs, reward, done, info = result
             
             # Renderizar
-            try:
-                env.render()
-            except:
-                pass
+            if render and args.render_every > 0 and step % args.render_every == 0:
+                try:
+                    env.render()
+                except Exception as render_error:
+                    print(f"   Aviso: render fallo en step {step}: {render_error}")
             
             total_steps += 1
             episode_steps += 1
             episode_reward += reward
             
             # Mostrar progreso
-            if step % 100 == 0:
-                print(f"   Step {step}/1000 | Ep.{episode} | Steps: {episode_steps} | Reward: {episode_reward:.2f}")
+            if step % 50 == 0:
+                print(f"   Step {step}/{args.steps} | Ep.{episode} | Steps: {episode_steps} | Reward: {episode_reward:.2f}")
             
             # Reset si termina
             if done:
@@ -213,7 +281,8 @@ def main():
                 if episode <= 10:  # Solo mostrar primeros 10 episodios
                     print(f"   Episodio {episode}")
             
-            time.sleep(0.01)
+            if render and args.sleep > 0:
+                time.sleep(args.sleep)
         
         print("\n✓ Evaluación completada con POLÍTICA ENTRENADA")
         
