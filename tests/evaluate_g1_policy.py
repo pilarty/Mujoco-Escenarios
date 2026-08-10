@@ -84,6 +84,14 @@ def load_local_trajectory(env_name, local_npz):
     return traj
 
 
+def load_local_trajectories(env_name, local_npz_paths):
+    paths = local_npz_paths if isinstance(local_npz_paths, list) else [local_npz_paths]
+    trajectories = [load_local_trajectory(env_name, path) for path in paths]
+    if len(trajectories) == 1:
+        return trajectories[0]
+    return Trajectory.concatenate(trajectories)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Evalua una politica entrenada de Unitree G1.")
     parser.add_argument("--steps", type=int, default=200, help="Cantidad de steps de evaluacion.")
@@ -116,7 +124,7 @@ def build_eval_env(agent_conf, render=True):
     local_npz = factory_params.pop("local_npz", None)
     if local_npz:
         factory_params["custom_dataset_conf"] = CustomDatasetConf(
-            traj=load_local_trajectory(env_params.get("env_name", "UnitreeG1"), local_npz)
+            traj=load_local_trajectories(env_params.get("env_name", "UnitreeG1"), local_npz)
         )
     factory = TaskFactory.get_factory_cls(factory_name)
     return factory.make(**env_params, **factory_params)

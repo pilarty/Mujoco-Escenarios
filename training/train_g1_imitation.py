@@ -124,7 +124,12 @@ def parse_args():
     parser.add_argument("--env", default="MjxUnitreeG1", choices=["UnitreeG1", "MjxUnitreeG1"])
     parser.add_argument("--dataset", default="auto", choices=["auto", "default", "lafan1"])
     parser.add_argument("--task", default=None, help="Task default/mocap a usar. Si se omite, se prueban candidatos.")
-    parser.add_argument("--local-npz", default=None, help="Ruta a una trayectoria local .npz para evitar HuggingFace.")
+    parser.add_argument(
+        "--local-npz",
+        nargs="+",
+        default=None,
+        help="Una o mas trayectorias locales .npz para evitar HuggingFace.",
+    )
     parser.add_argument("--timesteps", type=int, default=10_000, help="Timesteps totales. Default: smoke test corto.")
     parser.add_argument("--num-envs", type=int, default=4, help="Ambientes paralelos para smoke/local CPU.")
     parser.add_argument("--num-steps", type=int, default=10, help="Steps por rollout.")
@@ -153,6 +158,15 @@ def load_local_trajectory(env_name, local_npz):
             replace_qvel_with_finite_diff=False,
         )
     return traj
+
+
+def load_local_trajectories(env_name, local_npz_paths):
+    paths = local_npz_paths if isinstance(local_npz_paths, list) else [local_npz_paths]
+    trajectories = [load_local_trajectory(env_name, path) for path in paths]
+    if len(trajectories) == 1:
+        return trajectories[0]
+    print(f"Concatenando {len(trajectories)} trayectorias locales...", flush=True)
+    return Trajectory.concatenate(trajectories)
 
 
 def make_config(args, dataset, task):
@@ -228,7 +242,7 @@ def make_config(args, dataset, task):
 def make_env(args, dataset, task):
     configure_huggingface_ssl()
     if dataset == "local":
-        traj = load_local_trajectory(args.env, args.local_npz)
+        traj = load_local_trajectories(args.env, args.local_npz)
         return ImitationFactory.make(
             env_name=args.env,
             custom_dataset_conf=CustomDatasetConf(traj=traj),
@@ -288,7 +302,10 @@ def make_env(args, dataset, task):
 
 def make_first_available_env(args):
     if args.local_npz:
-        task = os.path.splitext(os.path.basename(args.local_npz))[0]
+        if len(args.local_npz) == 1:
+            task = os.path.splitext(os.path.basename(args.local_npz[0]))[0]
+        else:
+            task = f"multi_{len(args.local_npz)}_npz"
         return "local", task, make_env(args, "local", task)
 
     if args.task:
