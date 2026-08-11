@@ -78,6 +78,75 @@ def print_checkpoint_config(agent_conf):
         print(f"    - {label}: {value}")
 
 
+def collect_env_objects(env):
+    objects = []
+    queue = [env]
+    seen = set()
+    while queue:
+        obj = queue.pop(0)
+        if obj is None or id(obj) in seen:
+            continue
+        seen.add(id(obj))
+        objects.append(obj)
+        for attr in ("env", "_env", "unwrapped", "base_env"):
+            try:
+                child = getattr(obj, attr, None)
+            except Exception:
+                child = None
+            if child is not None and id(child) not in seen:
+                queue.append(child)
+    return objects
+
+
+def get_mujoco_qpos(env):
+    for obj in collect_env_objects(env):
+        for data_attr in ("data", "_data"):
+            data = getattr(obj, data_attr, None)
+            qpos = getattr(data, "qpos", None)
+            if qpos is not None and len(qpos) >= 3:
+                return np.array(qpos, dtype=np.float64).copy()
+        for sim_attr in ("sim", "_sim"):
+            sim = getattr(obj, sim_attr, None)
+            data = getattr(sim, "data", None)
+            qpos = getattr(data, "qpos", None)
+            if qpos is not None and len(qpos) >= 3:
+                return np.array(qpos, dtype=np.float64).copy()
+    return None
+
+
+def get_env_dt(env):
+    for obj in collect_env_objects(env):
+        for attr in ("dt", "timestep"):
+            value = getattr(obj, attr, None)
+            if isinstance(value, (int, float)) and value > 0:
+                return float(value)
+        model = getattr(obj, "model", None) or getattr(obj, "_model", None)
+        opt = getattr(model, "opt", None)
+        timestep = getattr(opt, "timestep", None)
+        if timestep is not None and timestep > 0:
+            return float(timestep)
+    return None
+
+
+def print_physics_metrics(root_positions, total_steps, env):
+    if len(root_positions) < 2:
+        print("   Métricas físicas: no se pudo acceder a qpos de MuJoCo")
+        return
+
+    positions = np.array(root_positions)
+    xy_delta = positions[-1, :2] - positions[0, :2]
+    xy_distance = float(np.linalg.norm(xy_delta))
+    heights = positions[:, 2]
+    print("   Métricas físicas:")
+    print(f"   - Desplazamiento XY: {xy_distance:.3f} m (dx={xy_delta[0]:.3f}, dy={xy_delta[1]:.3f})")
+    print(f"   - Altura base min/media/final: {np.min(heights):.3f} / {np.mean(heights):.3f} / {heights[-1]:.3f} m")
+    if total_steps > 0:
+        print(f"   - Avance promedio: {xy_distance / total_steps:.5f} m/step")
+    dt = get_env_dt(env)
+    if dt and total_steps > 0:
+        print(f"   - Velocidad XY promedio estimada: {xy_distance / (total_steps * dt):.3f} m/s")
+
+
 def base_env_name(env_name):
     return env_name.replace("Mjx", "", 1) if isinstance(env_name, str) and env_name.startswith("Mjx") else env_name
 
@@ -290,6 +359,10 @@ def main():
         episode_reward = 0
         episode_lengths = []
         episode_rewards = []
+        root_positions = []
+        qpos = get_mujoco_qpos(env)
+        if qpos is not None:
+            root_positions.append(qpos[:3])
         
         print(f"   Episodio {episode}")
         
@@ -315,6 +388,9 @@ def main():
             total_steps += 1
             episode_steps += 1
             episode_reward += float(reward)
+            qpos = get_mujoco_qpos(env)
+            if qpos is not None:
+                root_positions.append(qpos[:3])
             
             # Mostrar progreso
             if step % 50 == 0:
@@ -347,6 +423,7 @@ def main():
             print(f"   Largo medio: {np.mean(episode_lengths):.1f} steps")
             print(f"   Largo mínimo/máximo: {min(episode_lengths)} / {max(episode_lengths)} steps")
             print(f"   Reward medio: {np.mean(episode_rewards):.2f}")
+            print_physics_metrics(root_positions, total_steps, env)
         
     except KeyboardInterrupt:
         print(f"\n\n⚠️  Evaluación detenida por el usuario")
