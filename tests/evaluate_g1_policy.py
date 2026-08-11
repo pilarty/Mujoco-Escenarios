@@ -128,7 +128,7 @@ def get_env_dt(env):
     return None
 
 
-def print_physics_metrics(root_positions, total_steps, env):
+def print_physics_metrics(root_positions, total_steps, env, fall_step, fall_height):
     if len(root_positions) < 2:
         print("   Métricas físicas: no se pudo acceder a qpos de MuJoCo")
         return
@@ -140,6 +140,10 @@ def print_physics_metrics(root_positions, total_steps, env):
     print("   Métricas físicas:")
     print(f"   - Desplazamiento XY: {xy_distance:.3f} m (dx={xy_delta[0]:.3f}, dy={xy_delta[1]:.3f})")
     print(f"   - Altura base min/media/final: {np.min(heights):.3f} / {np.mean(heights):.3f} / {heights[-1]:.3f} m")
+    if fall_step is None:
+        print(f"   - Caída por altura (< {fall_height:.2f} m): no detectada")
+    else:
+        print(f"   - Caída por altura (< {fall_height:.2f} m): step {fall_step}")
     if total_steps > 0:
         print(f"   - Avance promedio: {xy_distance / total_steps:.5f} m/step")
     dt = get_env_dt(env)
@@ -203,6 +207,8 @@ def parse_args():
     parser.add_argument("--sleep", type=float, default=0.02, help="Pausa entre steps cuando hay render.")
     parser.add_argument("--no-render", action="store_true", help="Ejecuta la evaluacion sin abrir MuJoCo viewer.")
     parser.add_argument("--render-every", type=int, default=1, help="Renderiza cada N steps.")
+    parser.add_argument("--fall-height", type=float, default=0.35, help="Altura de base bajo la cual se reporta caida.")
+    parser.add_argument("--fall-grace-steps", type=int, default=20, help="Steps iniciales ignorados para detectar caida por altura.")
     return parser.parse_args()
 
 
@@ -360,6 +366,7 @@ def main():
         episode_lengths = []
         episode_rewards = []
         root_positions = []
+        fall_step = None
         qpos = get_mujoco_qpos(env)
         if qpos is not None:
             root_positions.append(qpos[:3])
@@ -391,6 +398,8 @@ def main():
             qpos = get_mujoco_qpos(env)
             if qpos is not None:
                 root_positions.append(qpos[:3])
+                if fall_step is None and step >= args.fall_grace_steps and qpos[2] < args.fall_height:
+                    fall_step = step
             
             # Mostrar progreso
             if step % 50 == 0:
@@ -423,7 +432,7 @@ def main():
             print(f"   Largo medio: {np.mean(episode_lengths):.1f} steps")
             print(f"   Largo mínimo/máximo: {min(episode_lengths)} / {max(episode_lengths)} steps")
             print(f"   Reward medio: {np.mean(episode_rewards):.2f}")
-            print_physics_metrics(root_positions, total_steps, env)
+            print_physics_metrics(root_positions, total_steps, env, fall_step, args.fall_height)
         
     except KeyboardInterrupt:
         print(f"\n\n⚠️  Evaluación detenida por el usuario")
