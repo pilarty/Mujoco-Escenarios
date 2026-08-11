@@ -34,13 +34,48 @@ def unique_paths(paths):
     return result
 
 
-def build_policy_paths():
+def resolve_policy_path(policy_path):
+    if policy_path is None:
+        return None
+    if os.path.isdir(policy_path):
+        return os.path.join(policy_path, "PPOJax_saved.pkl")
+    return policy_path
+
+
+def build_policy_paths(policy_path=None):
     """Prioriza politicas nuevas de imitation."""
     import glob
+
+    explicit_policy_path = resolve_policy_path(policy_path)
+    if explicit_policy_path:
+        return [explicit_policy_path]
 
     imitation_paths = glob.glob("training/imitation/**/PPOJax_saved.pkl", recursive=True)
     imitation_paths.sort(key=os.path.getmtime, reverse=True)
     return unique_paths(imitation_paths)
+
+
+def print_checkpoint_config(agent_conf):
+    config = getattr(agent_conf, "config", None)
+    if config is None or not hasattr(config, "experiment"):
+        print("  Config guardada: no disponible")
+        return
+
+    print("  Config guardada:")
+    fields = [
+        ("env", "experiment.env_params.env_name"),
+        ("task_factory", "experiment.task_factory.name"),
+        ("local_npz", "experiment.task_factory.params.local_npz"),
+        ("total_timesteps", "experiment.total_timesteps"),
+        ("num_envs", "experiment.num_envs"),
+        ("num_steps", "experiment.num_steps"),
+        ("normalize_env", "experiment.normalize_env"),
+        ("reward_type", "experiment.env_params.reward_type"),
+        ("lr", "experiment.lr"),
+    ]
+    for label, key in fields:
+        value = OmegaConf.select(config, key, default="N/A")
+        print(f"    - {label}: {value}")
 
 
 def base_env_name(env_name):
@@ -94,6 +129,7 @@ def load_local_trajectories(env_name, local_npz_paths):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Evalua una politica entrenada de Unitree G1.")
+    parser.add_argument("--policy-path", default=None, help="Ruta explicita al PPOJax_saved.pkl o a su carpeta.")
     parser.add_argument("--steps", type=int, default=200, help="Cantidad de steps de evaluacion.")
     parser.add_argument("--sleep", type=float, default=0.02, help="Pausa entre steps cuando hay render.")
     parser.add_argument("--no-render", action="store_true", help="Ejecuta la evaluacion sin abrir MuJoCo viewer.")
@@ -141,7 +177,7 @@ def main():
     print("\n1. CARGANDO POLÍTICA ENTRENADA")
     print("=" * 70)
     
-    policy_paths = build_policy_paths()
+    policy_paths = build_policy_paths(args.policy_path)
     
     policy_path = None
     agent_conf = None
@@ -161,6 +197,7 @@ def main():
                 mod_date = datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S')
                 print(f"  Tamaño: {size:.1f} KB")
                 print(f"  Última modificación: {mod_date}")
+                print_checkpoint_config(agent_conf)
                 break
             except Exception as e:
                 print(f"⚠ No se pudo cargar {path}: {e}")
@@ -168,9 +205,12 @@ def main():
     
     if policy_path is None:
         print("✗ No se encontró ninguna política entrenada")
-        print("\nBusqué en:")
-        for path in policy_paths[:10]:  # Mostrar solo los principales
-            print(f"  • {path}")
+        if args.policy_path:
+            print(f"\nRuta solicitada: {resolve_policy_path(args.policy_path)}")
+        else:
+            print("\nBusqué en:")
+            for path in policy_paths[:10]:  # Mostrar solo los principales
+                print(f"  • {path}")
         print("\nEjecuta primero uno de estos:")
         print("  • python training/train_g1_imitation.py --local-npz training/walk1_subject1.npz")
         return
@@ -248,6 +288,8 @@ def main():
         episode = 1
         episode_steps = 0
         episode_reward = 0
+        episode_lengths = []
+        episode_rewards = []
         
         print(f"   Episodio {episode}")
         
@@ -272,7 +314,7 @@ def main():
             
             total_steps += 1
             episode_steps += 1
-            episode_reward += reward
+            episode_reward += float(reward)
             
             # Mostrar progreso
             if step % 50 == 0:
@@ -281,6 +323,8 @@ def main():
             # Reset si termina
             if done:
                 print(f"\n   ✓ Episodio {episode} completado: {episode_steps} steps, reward {episode_reward:.2f}")
+                episode_lengths.append(episode_steps)
+                episode_rewards.append(episode_reward)
                 result = env.reset()
                 obs = result[0] if isinstance(result, tuple) else result
                 episode += 1
@@ -292,7 +336,17 @@ def main():
             if render and args.sleep > 0:
                 time.sleep(args.sleep)
         
+        if episode_steps > 0:
+            episode_lengths.append(episode_steps)
+            episode_rewards.append(episode_reward)
+
         print("\n✓ Evaluación completada con POLÍTICA ENTRENADA")
+        if episode_lengths:
+            print("\n📊 Métricas de evaluación:")
+            print(f"   Episodios observados: {len(episode_lengths)}")
+            print(f"   Largo medio: {np.mean(episode_lengths):.1f} steps")
+            print(f"   Largo mínimo/máximo: {min(episode_lengths)} / {max(episode_lengths)} steps")
+            print(f"   Reward medio: {np.mean(episode_rewards):.2f}")
         
     except KeyboardInterrupt:
         print(f"\n\n⚠️  Evaluación detenida por el usuario")
