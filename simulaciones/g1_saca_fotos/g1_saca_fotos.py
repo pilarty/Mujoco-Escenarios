@@ -1,4 +1,5 @@
 import os
+import json
 import math
 import mujoco
 import mujoco.viewer
@@ -16,14 +17,55 @@ ESCENARIO_DIR = os.path.join(PROJECT_ROOT, "escenarios", ESCENARIO)
 CAPTURAS_DIR = os.path.join(PROJECT_ROOT, "simulaciones", "g1_saca_fotos", "capturas")
 os.makedirs(CAPTURAS_DIR, exist_ok=True)
 
-MODELO = os.path.join(PROJECT_ROOT, "modelos", "detection.keras")
+# Modelo 1: detecta si hay daño o no (damaged / undamaged)
+MODELO_DETECCION = os.path.join(PROJECT_ROOT, "modelos", "detection.keras")
+modelo_deteccion = tf.keras.models.load_model(MODELO_DETECCION)
 
-modelo = tf.keras.models.load_model(MODELO)
+# Modelo 2: clasifica el tipo de daño (multi-etiqueta, con umbrales por clase)
+MODELO_CLASIFICACION = os.path.join(PROJECT_ROOT, "modelos", "modelo_classification.keras")
+THRESHOLDS_PATH = os.path.join(PROJECT_ROOT, "modelos", "thresholds.json")
 
-# Ruta relativa desde unitree_g1/ hacia el escenario, calculada automáticamente
+modelo_clasificacion = tf.keras.models.load_model(MODELO_CLASIFICACION)
+
+with open(THRESHOLDS_PATH) as f:
+    best_thresholds = json.load(f)
+
+FINAL_CLASSES = [
+    "Diagonal crack",
+    "Concrete spalling",
+    "Corrosion",
+    "Shear crack",
+    "Flexural/rocking crack",
+    "Debris",
+    "Detachment crack",
+]
+
+IMG_SIZE = (224, 224)
+
+
+def clasificar_tipo_de_dano(img_pil):
+    """
+    Recibe una imagen PIL (ya redimensionada a 224x224) y devuelve
+    una lista de tuplas (clase, probabilidad) para las clases que
+    superan su umbral correspondiente, ordenadas de mayor a menor.
+    """
+    img_array = tf.keras.utils.img_to_array(img_pil)
+    img_array = np.expand_dims(img_array, axis=0)
+
+    probs = modelo_clasificacion.predict(img_array, verbose=0)[0]
+
+    detectados = [
+        (FINAL_CLASSES[i], probs[i])
+        for i in range(len(FINAL_CLASSES))
+        if probs[i] > best_thresholds[FINAL_CLASSES[i]]
+    ]
+    detectados.sort(key=lambda x: x[1], reverse=True)
+    return detectados
+
+
+# Escena MuJoCo
 rel_path = os.path.relpath(ESCENARIO_DIR, UNITREE_DIR).replace("\\", "/")
 
-# Arma el XML combinado: robot (scene.xml) + escenario elegido
 xml_content = f"""
 <mujoco model="g1 con {ESCENARIO}">
   <include file="scene.xml"/>
@@ -80,7 +122,7 @@ with mujoco.viewer.launch_passive(escena, data) as viewer:
 
         data.qpos[3:7] = quat
 
-        mujoco.mj_step(escena, data)  # mj_forward no hace falta, mj_step ya lo incluye
+        mujoco.mj_step(escena, data)
 
         if frame % 300 == 0:
             renderer.update_scene(data, camera="head_camera")
@@ -89,14 +131,26 @@ with mujoco.viewer.launch_passive(escena, data) as viewer:
             img = Image.fromarray(imagen)
             img.save(os.path.join(CAPTURAS_DIR, f"frame_{frame:05d}.png"))
 
-            img_resized = img.resize((224, 224))
-            img_resized = np.array(img_resized)
-            img_resized = np.expand_dims(img_resized, axis=0)
+            img_resized = img.resize(IMG_SIZE)
+            img_array = np.array(img_resized)
+            img_array_batch = np.expand_dims(img_array, axis=0)
 
-            pred_prob = modelo.predict(img_resized, verbose=0)[0][0]
+            pred_prob = modelo_deteccion.predict(img_array_batch, verbose=0)[0][0]
             pred_label = "damaged" if pred_prob < 0.5 else "undamaged"
 
             print(f"Frame {frame}: {pred_label} (prob undamaged: {pred_prob:.4f})")
+
+            # Si hay daño, se manda la misma imagen (ya en 224x224) al
+            # segundo modelo para saber qué tipo de daño es.
+            if pred_label == "damaged":
+                detectados = clasificar_tipo_de_dano(img_resized)
+
+                if detectados:
+                    detalle = ", ".join(f"{c} ({p:.2%})" for c, p in detectados)
+                else:
+                    detalle = "sin tipo de daño específico detectado"
+
+                print(f"  -> Tipo de daño: {detalle}")
 
         frame += 1
         viewer.sync()
