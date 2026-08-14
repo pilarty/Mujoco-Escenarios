@@ -1,0 +1,130 @@
+[
+  {
+    "id": "frame_00000",
+    "frame": 0,
+    "timestamp": 1786662028.1334617,
+    "x": 2.263728549410322e-21,
+    "y": 3.108133171221018e-22,
+    "image": "images/frame_00000.png",
+    "detection_prob": 0.6103147268295288,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.7414838075637817
+      },
+      {
+        "class": "Flexural/rocking crack",
+        "prob": 0.10430166870355606
+      }
+    ]
+  },
+  {
+    "id": "frame_00300",
+    "frame": 300,
+    "timestamp": 1786662037.3429608,
+    "x": 0.7035595323529585,
+    "y": 1.7286992754124574e-05,
+    "image": "images/frame_00300.png",
+    "detection_prob": 0.745358943939209,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.9454897046089172
+      }
+    ]
+  },
+  {
+    "id": "frame_00600",
+    "frame": 600,
+    "timestamp": 1786662046.744651,
+    "x": 0.16992986080495687,
+    "y": 1.193520183533053,
+    "image": "images/frame_00600.png",
+    "detection_prob": 0.9601019024848938,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.8065457344055176
+      },
+      {
+        "class": "Flexural/rocking crack",
+        "prob": 0.15838418900966644
+      }
+    ]
+  },
+  {
+    "id": "frame_00900",
+    "frame": 900,
+    "timestamp": 1786662059.3983014,
+    "x": 0.0582156127587855,
+    "y": 1.3380948567879323,
+    "image": "images/frame_00900.png",
+    "detection_prob": 0.9945560097694397,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.5632241368293762
+      }
+    ]
+  },
+  {
+    "id": "frame_01200",
+    "frame": 1200,
+    "timestamp": 1786662071.626683,
+    "x": -0.10393726014736565,
+    "y": 1.5517194100387126,
+    "image": "images/frame_01200.png",
+    "detection_prob": 0.9970843195915222,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.9872771501541138
+      }
+    ]
+  },
+  {
+    "id": "frame_01500",
+    "frame": 1500,
+    "timestamp": 1786662083.0934064,
+    "x": -0.3098778625673592,
+    "y": 1.8225532489995504,
+    "image": "images/frame_01500.png",
+    "detection_prob": 0.996033787727356,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.9794133901596069
+      }
+    ]
+  },
+  {
+    "id": "frame_01800",
+    "frame": 1800,
+    "timestamp": 1786662094.3633928,
+    "x": -0.5545301081422779,
+    "y": 2.141619345158325,
+    "image": "images/frame_01800.png",
+    "detection_prob": 0.9937000870704651,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.9692374467849731
+      }
+    ]
+  },
+  {
+    "id": "frame_02100",
+    "frame": 2100,
+    "timestamp": 1786662106.2792919,
+    "x": -0.8371624417637279,
+    "y": 2.5001846443834577,
+    "image": "images/frame_02100.png",
+    "detection_prob": 0.9952785968780518,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.9645929932594299
+      }
+    ]
+  }
+]
