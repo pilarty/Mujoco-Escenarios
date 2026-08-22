@@ -7,4 +7,5 @@ PyOpenGL
 glfw
 imageio
 matplotlib
+onnxruntime
 -r locomujoco.txt
