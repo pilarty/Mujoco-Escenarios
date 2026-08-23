@@ -126,5 +126,43 @@
         "prob": 0.9645929932594299
       }
     ]
+  },
+  {
+    "id": "frame_00000",
+    "frame": 0,
+    "timestamp": 1787272899.5483766,
+    "x": 2.263728549410322e-21,
+    "y": 3.108133171221018e-22,
+    "image": "images/frame_00000.png",
+    "detection_prob": 0.6103147268295288,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.7414838075637817
+      },
+      {
+        "class": "Flexural/rocking crack",
+        "prob": 0.10430166870355606
+      }
+    ]
+  },
+  {
+    "id": "frame_00300",
+    "frame": 300,
+    "timestamp": 1787272917.3592894,
+    "x": 0.49313504936381247,
+    "y": 1.0822689677655093,
+    "image": "images/frame_00300.png",
+    "detection_prob": 0.6993920803070068,
+    "damage_types": [
+      {
+        "class": "Shear crack",
+        "prob": 0.8541967868804932
+      },
+      {
+        "class": "Concrete spalling",
+        "prob": 0.7135471105575562
+      }
+    ]
   }
 ]

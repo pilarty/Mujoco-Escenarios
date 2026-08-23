@@ -1,33 +1,17 @@
-"""
-Extrae las dimensiones reales de la habitación a partir del mesh (.obj) que
-usa escenario.xml, y genera reporte/room_dimensions.json para que la
-interfaz web pueda dibujar un plano a escala sin que nadie suba una foto.
-
-A diferencia de un escenario armado con paredes individuales (geoms box),
-acá toda la habitación es UN solo mesh 3D. Entonces el script:
-  1. Lee escenario.xml y encuentra qué mesh usa, con qué escala, y en qué
-     posición/rotación está colocado el body que lo contiene.
-  2. Lee los vértices del archivo .obj (líneas "v x y z").
-  3. Les aplica la escala y la transformación (pos/euler) del body, para
-     llevarlos a coordenadas del mundo (las mismas que usa MuJoCo/el robot).
-  4. Calcula el contorno (envolvente convexa) en x,y de esos vértices, que
-     se usa como el perímetro del plano.
-
-Uso:
-    python extraer_dimensiones.py
-"""
-
 import os
 import math
 import json
 import xml.etree.ElementTree as ET
+import requests  # NUEVO: pip install requests
+
+# NUEVO: URL del backend
+BACKEND_URL = "http://localhost:8000/room"
 
 # Debe coincidir con el ESCENARIO usado en el script de simulación
 ESCENARIO = "habitacion_daniada"
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ESCENARIO_DIR = os.path.join(PROJECT_ROOT, "escenarios", ESCENARIO)
-ESCENARIO_XML = os.path.join(ESCENARIO_DIR, "escenario.xml")
 
 REPORTE_DIR = os.path.join(PROJECT_ROOT, "simulaciones", "g1_saca_fotos", "reporte")
 OUT_PATH = os.path.join(REPORTE_DIR, "room_dimensions.json")
@@ -102,11 +86,25 @@ def envolvente_convexa(puntos):
     return inferior[:-1] + superior[:-1]
 
 
-if __name__ == "__main__":
-    if not os.path.exists(ESCENARIO_XML):
-        raise FileNotFoundError(f"No se encontró {ESCENARIO_XML}")
+def enviar_room_a_backend(room):
+    """NUEVO: manda el layout al backend. Si el backend no está corriendo,
+    no rompe el script, solo avisa por consola."""
+    try:
+        requests.post(BACKEND_URL, json=room, timeout=3)
+        print(f"Layout enviado a {BACKEND_URL}")
+    except requests.exceptions.RequestException as e:
+        print(f"No se pudo enviar el layout al backend ({e}). ¿Está corriendo uvicorn?")
 
-    root = ET.parse(ESCENARIO_XML).getroot()
+
+def calcular_room_layout(escenario_dir):
+    """Lee escenario.xml + los .obj de sus meshes y devuelve el dict de
+    layout (x_min/x_max/y_min/y_max/width/depth/floor_polygon), listo
+    para mandar al backend. No escribe archivos ni hace requests."""
+    escenario_xml = os.path.join(escenario_dir, "escenario.xml")
+    if not os.path.exists(escenario_xml):
+        raise FileNotFoundError(f"No se encontró {escenario_xml}")
+
+    root = ET.parse(escenario_xml).getroot()
 
     # Mapea nombre de mesh -> (archivo, escala)
     meshes = {}
@@ -136,7 +134,7 @@ if __name__ == "__main__":
             # (unitree_g1/...); acá lo resolvemos directo contra la carpeta
             # meshes/ del propio escenario, usando el nombre de archivo.
             nombre_archivo = os.path.basename(info["file"])
-            obj_path = os.path.join(ESCENARIO_DIR, "meshes", nombre_archivo)
+            obj_path = os.path.join(escenario_dir, "meshes", nombre_archivo)
 
             if not os.path.exists(obj_path):
                 print(f"Aviso: no se encontró el mesh en {obj_path}, se omite.")
@@ -148,29 +146,35 @@ if __name__ == "__main__":
                 todos_los_puntos.append((wx, wy))
 
     if not todos_los_puntos:
-        print("No se pudieron extraer vértices de ningún mesh. Revisá escenario.xml a mano.")
-    else:
-        xs = [p[0] for p in todos_los_puntos]
-        ys = [p[1] for p in todos_los_puntos]
-        x_min, x_max = min(xs), max(xs)
-        y_min, y_max = min(ys), max(ys)
+        raise RuntimeError("No se pudieron extraer vértices de ningún mesh. Revisá escenario.xml a mano.")
 
-        contorno = envolvente_convexa(todos_los_puntos)
+    xs = [p[0] for p in todos_los_puntos]
+    ys = [p[1] for p in todos_los_puntos]
+    x_min, x_max = min(xs), max(xs)
+    y_min, y_max = min(ys), max(ys)
 
-        room = {
-            "x_min": x_min,
-            "x_max": x_max,
-            "y_min": y_min,
-            "y_max": y_max,
-            "width": x_max - x_min,
-            "depth": y_max - y_min,
-            "floor_polygon": [[round(x, 4), round(y, 4)] for x, y in contorno],
-        }
+    contorno = envolvente_convexa(todos_los_puntos)
 
-        os.makedirs(REPORTE_DIR, exist_ok=True)
-        with open(OUT_PATH, "w", encoding="utf-8") as f:
-            json.dump(room, f, ensure_ascii=False, indent=2)
+    return {
+        "x_min": x_min,
+        "x_max": x_max,
+        "y_min": y_min,
+        "y_max": y_max,
+        "width": x_max - x_min,
+        "depth": y_max - y_min,
+        "floor_polygon": [[round(x, 4), round(y, 4)] for x, y in contorno],
+    }
 
-        print(f"Habitación: {room['width']:.2f} m x {room['depth']:.2f} m")
-        print(f"{len(todos_los_puntos)} vértices leídos, {len(contorno)} puntos en el contorno")
-        print(f"Guardado en {OUT_PATH}")
+
+if __name__ == "__main__":
+    room = calcular_room_layout(ESCENARIO_DIR)
+
+    os.makedirs(REPORTE_DIR, exist_ok=True)
+    with open(OUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(room, f, ensure_ascii=False, indent=2)
+
+    print(f"Habitación: {room['width']:.2f} m x {room['depth']:.2f} m")
+    print(f"{len(room['floor_polygon'])} puntos en el contorno")
+    print(f"Guardado en {OUT_PATH}")
+
+    enviar_room_a_backend(room)
