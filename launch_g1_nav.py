@@ -9,6 +9,7 @@ con la pila de despliegue oficial de Unitree en C++.
 """
 
 import math
+import os
 import time
 
 import mujoco
@@ -17,7 +18,10 @@ import numpy as np
 import onnxruntime as ort
 import yaml
 
-SCENE_PATH = "unitree_g1/scene.xml"
+# Escenario a cargar, desde modelos/ (mismo patrón que launch.py). Estos
+# archivos hacen <include file="g1.xml"/>, por eso se resuelven cambiando el
+# directorio de trabajo a unitree_g1/ antes de compilar el XML.
+SCENARIO_FILE = "room.xml"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
 POLICY_ONNX_PATH = "g1_navigation_integration/policy/policy.onnx"
 NAV_CONFIG_PATH = "g1_nav_config.yaml"
@@ -56,7 +60,17 @@ def load_yaml(path):
 
 
 def build_model():
-    model = mujoco.MjModel.from_xml_path(SCENE_PATH)
+    scenario_path = os.path.join("modelos", SCENARIO_FILE)
+    with open(scenario_path, "r", encoding="utf-8") as f:
+        xml_content = f.read()
+
+    original_dir = os.getcwd()
+    try:
+        os.chdir("unitree_g1")  # para que <include file="g1.xml"/> y meshdir="assets" resuelvan
+        model = mujoco.MjModel.from_xml_string(xml_content)
+    finally:
+        os.chdir(original_dir)
+
     data = mujoco.MjData(model)
     return model, data
 
