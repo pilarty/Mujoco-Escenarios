@@ -1,0 +1,13 @@
+<mujocoinclude>
+  <asset>
+    <mesh name="mi_malla" file="../../escenarios/habitacion_daniada3/meshes/habitacion_daniada3.obj" scale="4.5 4.5 4.5"/>
+    <texture name="tex_room" type="2d" file="../../escenarios/habitacion_daniada3/meshes/texture_pbr_20250901.png"/>
+    <material name="mat_room" texture="tex_room"/>
+  </asset>
+
+  <worldbody>
+    <body name="objeto_dañado" pos="0.3499 0.2810 0" euler="1.5707963 0 0">
+      <geom type="mesh" mesh="mi_malla" material="mat_room" contype="0" conaffinity="0"/>
+    </body>
+  </worldbody>
+</mujocoinclude>

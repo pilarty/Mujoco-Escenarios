@@ -15,7 +15,7 @@ BACKEND_URL = "http://localhost:8000/detections"
 ROOM_URL = "http://localhost:8000/room"
 
 # Nombre de la carpeta dentro de escenarios/ que se quiere cargar
-ESCENARIO = "habitacion_daniada"
+ESCENARIO = "habitacion_corrosion_crack"
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 UNITREE_DIR = os.path.join(PROJECT_ROOT, "unitree_g1")
