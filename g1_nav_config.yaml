@@ -3,7 +3,7 @@
 # g1_navigation_integration/policy/deploy.yaml y no se duplica acá.)
 
 # Secuencia de objetivos (x, y) en el mundo, caminados en orden.
-waypoints: [[3.0, 0.0], [3.0, 3.0], [0.0, 3.0]]
+waypoints: [[1.0, 1.0], [1.5, 1.0], [0.0, 1.0]]
 
 # Distancia (m) al waypoint actual por debajo de la cual se considera
 # "llegada" y arranca la pausa. Más laxo que el goal_tolerance interno

@@ -10,21 +10,47 @@ con la pila de despliegue oficial de Unitree en C++.
 
 import math
 import os
+import sys
 import time
+import json
+import io
+import base64
 
 import mujoco
 import mujoco.viewer
 import numpy as np
 import onnxruntime as ort
 import yaml
+import requests
+from PIL import Image
 
-# Escenario a cargar, desde modelos/ (mismo patrón que launch.py). Estos
-# archivos hacen <include file="g1.xml"/>, por eso se resuelven cambiando el
-# directorio de trabajo a unitree_g1/ antes de compilar el XML.
-SCENARIO_FILE = "room.xml"
+# Agregar simulaciones/g1_conectado al path para importar calcular_room_layout
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "simulaciones", "g1_conectado"))
+from extraer_dimensiones_CONECTADO import calcular_room_layout
+
+# Backend URLs
+BACKEND_DETECTIONS_URL = "http://localhost:8000/detections"
+BACKEND_ROOM_URL = "http://localhost:8000/room"
+
+# Escenario a cargar
+SCENARIO = "habitacion_daniada"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
 POLICY_ONNX_PATH = "g1_navigation_integration/policy/policy.onnx"
 NAV_CONFIG_PATH = "g1_nav_config.yaml"
+
+# Directorios para capturas
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+REPORTE_DIR = os.path.join(PROJECT_ROOT, "simulaciones", "g1_saca_fotos", "reporte")
+REPORTE_IMAGENES_DIR = os.path.join(REPORTE_DIR, "images")
+CAPTURAS_JSON = os.path.join(REPORTE_DIR, "capturas.json")
+os.makedirs(REPORTE_IMAGENES_DIR, exist_ok=True)
+
+if os.path.exists(CAPTURAS_JSON):
+    with open(CAPTURAS_JSON, "r", encoding="utf-8") as f:
+        capturas = json.load(f)
+else:
+    capturas = []
 
 FREE_JOINT_NAME = "floating_base_joint"
 PELVIS_GYRO_SENSOR = "imu-pelvis-angular-velocity"
@@ -59,14 +85,52 @@ def load_yaml(path):
         return yaml.safe_load(f)
 
 
+def guardar_captura(registro):
+    """Guarda el registro de captura en capturas.json."""
+    capturas.append(registro)
+    with open(CAPTURAS_JSON, "w", encoding="utf-8") as f:
+        json.dump(capturas, f, ensure_ascii=False, indent=2)
+
+
+def enviar_a_backend(registro, img_pil):
+    """Envía la captura al backend de detecciones."""
+    buffer = io.BytesIO()
+    img_pil.save(buffer, format="PNG")
+    imagen_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    payload = {
+        "frame": registro["frame"],
+        "timestamp": registro["timestamp"],
+        "x": registro["x"],
+        "y": registro["y"],
+        "imagen_base64": imagen_b64,
+    }
+    try:
+        requests.post(BACKEND_DETECTIONS_URL, json=payload, timeout=15)
+        print(f"  -> Captura enviada al backend (frame {registro['frame']})")
+    except requests.exceptions.RequestException as e:
+        print(f"  -> No se pudo enviar al backend ({e}). ¿Está corriendo uvicorn?")
+
+
 def build_model():
-    scenario_path = os.path.join("modelos", SCENARIO_FILE)
-    with open(scenario_path, "r", encoding="utf-8") as f:
-        xml_content = f.read()
+    """Construye el modelo MuJoCo con el escenario especificado.
+    Similar a g1_saca_fotos_con_clasificacion_CONECTADO.py.
+    """
+    unitree_dir = os.path.join(PROJECT_ROOT, "unitree_g1")
+    escenario_dir = os.path.join(PROJECT_ROOT, "escenarios", SCENARIO)
+    
+    rel_path = os.path.relpath(escenario_dir, unitree_dir).replace("\\", "/")
+    
+    xml_content = f"""
+<mujoco model="g1 con {SCENARIO}">
+  <include file="scene.xml"/>
+  <include file="{rel_path}/escenario.xml"/>
+</mujoco>
+"""
 
     original_dir = os.getcwd()
     try:
-        os.chdir("unitree_g1")  # para que <include file="g1.xml"/> y meshdir="assets" resuelvan
+        os.chdir(unitree_dir)
         model = mujoco.MjModel.from_xml_string(xml_content)
     finally:
         os.chdir(original_dir)
@@ -220,6 +284,17 @@ def build_observation(data, addr, quat, joint_pos, joint_vel, default_joint_pos,
 
 
 def main():
+    # Enviar room layout al backend al iniciar
+    try:
+        escenario_dir = os.path.join(PROJECT_ROOT, "escenarios", SCENARIO)
+        room = calcular_room_layout(escenario_dir)
+        requests.post(BACKEND_ROOM_URL, json=room, timeout=5)
+        print(f"[g1_nav] Room layout enviado: {room['width']:.2f} m x {room['depth']:.2f} m")
+    except requests.exceptions.RequestException as e:
+        print(f"[g1_nav] No se pudo enviar el room layout al backend ({e}). ¿Está corriendo uvicorn?")
+    except Exception as e:
+        print(f"[g1_nav] No se pudo calcular el room layout ({e}).")
+
     deploy_cfg = load_yaml(DEPLOY_YAML_PATH)
     nav_cfg = load_yaml(NAV_CONFIG_PATH)
 
@@ -241,6 +316,9 @@ def main():
     addr = resolve_joint_addresses(model)
     apply_pd_gains(model, addr, stiffness, damping)
     init_state(model, data, addr, default_joint_pos)
+
+    # Renderer para captura de fotos desde la cámara del robot
+    renderer = mujoco.Renderer(model, 480, 640)
 
     physics_dt = model.opt.timestep
     decimation = round(control_dt / physics_dt)
@@ -270,6 +348,7 @@ def main():
     step_count = 0
     log_every = max(1, round(1.0 / control_dt))
     fallen_warned = False
+    captured_at_waypoints = set()  # Para evitar capturas duplicadas en el mismo waypoint
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
         while viewer.is_running():
@@ -296,6 +375,30 @@ def main():
             for _ in range(decimation):
                 mujoco.mj_step(model, data)
             viewer.sync()
+
+            # Capturar foto al llegar a cada waypoint (solo una vez por waypoint)
+            wp_idx = nav_state["current_idx"]
+            if nav_state["waiting_at_waypoint"] and wp_idx not in captured_at_waypoints:
+                captured_at_waypoints.add(wp_idx)
+                
+                renderer.update_scene(data, camera="head_camera")
+                imagen = renderer.render()
+                img = Image.fromarray(imagen)
+                
+                nombre_imagen = f"waypoint_{wp_idx:02d}_step_{step_count:06d}.png"
+                img.save(os.path.join(REPORTE_IMAGENES_DIR, nombre_imagen))
+                
+                registro = {
+                    "id": f"waypoint_{wp_idx:02d}",
+                    "frame": step_count,
+                    "timestamp": time.time(),
+                    "x": float(base_pos[0]),
+                    "y": float(base_pos[1]),
+                    "image": f"images/{nombre_imagen}",
+                }
+                guardar_captura(registro)
+                enviar_a_backend(registro, img)
+                print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
 
             projected_gravity = get_projected_gravity(quat)
             if projected_gravity[2] > -0.3 and not fallen_warned:

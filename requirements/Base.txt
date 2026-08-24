@@ -8,4 +8,7 @@ glfw
 imageio
 matplotlib
 onnxruntime
+keyboard
+tensorflow
+requests
 -r locomujoco.txt
