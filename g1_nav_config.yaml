@@ -1,0 +1,18 @@
+# Configuración de navegación para launch_g1_nav.py
+# (Todo lo que SÍ es parte del contrato de la red ONNX vive en
+# g1_navigation_integration/policy/deploy.yaml y no se duplica acá.)
+
+# Secuencia de objetivos (x, y) en el mundo, caminados en orden.
+waypoints: [[1.0, 1.0], [1.5, 1.0], [0.0, 1.0]]
+
+# Distancia (m) al waypoint actual por debajo de la cual se considera
+# "llegada" y arranca la pausa. Más laxo que el goal_tolerance interno
+# de deploy.yaml (0.2) porque el control proporcional converge de forma
+# asintótica y puede no cruzar nunca un umbral más estricto.
+arrival_radius: 0.4
+
+# Tiempo (s) de pausa en cada waypoint antes de avanzar al siguiente.
+# Durante la pausa el comando de velocidad se fuerza a (0,0,0) pero la
+# política sigue en control (marcha en el lugar), no hay hand-off a un
+# controlador rígido.
+pause_duration: 3.0
