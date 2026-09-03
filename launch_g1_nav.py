@@ -32,6 +32,8 @@ from extraer_dimensiones_CONECTADO import calcular_room_layout
 # Backend URLs
 BACKEND_DETECTIONS_URL = "http://localhost:8000/detections"
 BACKEND_ROOM_URL = "http://localhost:8000/room"
+BACKEND_MISSION_URL = "http://localhost:8000/mission"
+BACKEND_MISSION_STATUS_URL = "http://localhost:8000/mission/status"
 
 # Escenario a cargar
 SCENARIO = "habitacion_daniada"
@@ -90,6 +92,46 @@ def guardar_captura(registro):
     capturas.append(registro)
     with open(CAPTURAS_JSON, "w", encoding="utf-8") as f:
         json.dump(capturas, f, ensure_ascii=False, indent=2)
+
+
+def cargar_mision(nav_config_path):
+    """Intenta traer la misión (waypoints, arrival_radius, pause_duration)
+    desde el backend (GET /mission). Si el backend no está corriendo o
+    todavía no se definió ninguna misión, cae al yaml local (misma
+    lógica que ya usa esta caminata cuando el backend no responde)."""
+    try:
+        resp = requests.get(BACKEND_MISSION_URL, timeout=3)
+        resp.raise_for_status()
+        mision = resp.json()
+        if mision:
+            print(f"[g1_nav] Misión obtenida del backend: {len(mision['waypoints'])} waypoints")
+            return mision["waypoints"], mision["arrival_radius"], mision["pause_duration"]
+        print("[g1_nav] El backend no tiene ninguna misión definida todavía, uso el yaml local.")
+    except requests.exceptions.RequestException as e:
+        print(f"[g1_nav] No se pudo obtener la misión del backend ({e}). Uso el yaml local.")
+
+    nav_cfg = load_yaml(nav_config_path)
+    return nav_cfg["waypoints"], nav_cfg["arrival_radius"], nav_cfg["pause_duration"]
+
+
+def reportar_estado_mision(base_pos, yaw, nav_state, distance, waypoints_total, fallen):
+    """Telemetría de baja frecuencia hacia el backend (no se llama en cada
+    tick de física, solo en los mismos puntos donde ya se loguea por
+    consola). Best-effort: si el backend no responde, no corta la caminata."""
+    payload = {
+        "x": float(base_pos[0]),
+        "y": float(base_pos[1]),
+        "yaw": float(yaw),
+        "waypoint_idx": min(nav_state["current_idx"], waypoints_total - 1),
+        "waypoints_total": waypoints_total,
+        "distance_to_goal": float(distance),
+        "waiting_at_waypoint": bool(nav_state["waiting_at_waypoint"]),
+        "fallen": bool(fallen),
+    }
+    try:
+        requests.post(BACKEND_MISSION_STATUS_URL, json=payload, timeout=3)
+    except requests.exceptions.RequestException as e:
+        print(f"[g1_nav] No se pudo reportar el estado de la misión al backend ({e}).")
 
 
 def enviar_a_backend(registro, img_pil):
@@ -296,7 +338,6 @@ def main():
         print(f"[g1_nav] No se pudo calcular el room layout ({e}).")
 
     deploy_cfg = load_yaml(DEPLOY_YAML_PATH)
-    nav_cfg = load_yaml(NAV_CONFIG_PATH)
 
     stiffness = np.array(deploy_cfg["stiffness"], dtype=np.float64)
     damping = np.array(deploy_cfg["damping"], dtype=np.float64)
@@ -308,9 +349,7 @@ def main():
     gait_period = deploy_cfg["observations"]["navigation_gait_phase"]["params"]["period"]
     control_dt = deploy_cfg["step_dt"]
 
-    waypoints = nav_cfg["waypoints"]
-    arrival_radius = nav_cfg["arrival_radius"]
-    pause_duration = nav_cfg["pause_duration"]
+    waypoints, arrival_radius, pause_duration = cargar_mision(NAV_CONFIG_PATH)
 
     model, data = build_model()
     addr = resolve_joint_addresses(model)
@@ -399,6 +438,7 @@ def main():
                 guardar_captura(registro)
                 enviar_a_backend(registro, img)
                 print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
+                reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
             projected_gravity = get_projected_gravity(quat)
             if projected_gravity[2] > -0.3 and not fallen_warned:
@@ -416,6 +456,7 @@ def main():
                     f"cmd=({nav_cmd[0]:.2f},{nav_cmd[1]:.2f},{nav_cmd[2]:.2f}) "
                     f"waiting={nav_state['waiting_at_waypoint']}"
                 )
+                reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
             time.sleep(control_dt)
 
