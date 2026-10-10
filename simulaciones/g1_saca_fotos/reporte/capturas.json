@@ -158,8 +158,6 @@
     "x": 1.6013691239224648,
     "y": 0.6872448577653885,
     "image": "images/frame_01800.png"
-<<<<<<< Updated upstream
-=======
   },
   {
     "id": "waypoint_00",
@@ -192,86 +190,5 @@
     "x": 0.3555314627527128,
     "y": 0.8176022100950239,
     "image": "images/waypoint_02_step_000674.png"
-  },
-  {
-    "id": "waypoint_00",
-    "frame": 143,
-    "timestamp": 1790801798.7950337,
-    "x": 0.7061393358057129,
-    "y": 0.7316528997686902,
-    "image": "images/waypoint_00_step_000143.png"
-  },
-  {
-    "id": "waypoint_01",
-    "frame": 384,
-    "timestamp": 1790801835.7171683,
-    "x": 1.1336928399079065,
-    "y": 0.8457668363460017,
-    "image": "images/waypoint_01_step_000384.png"
-  },
-  {
-    "id": "waypoint_02",
-    "frame": 674,
-    "timestamp": 1790801878.1826732,
-    "x": 0.3555314627527128,
-    "y": 0.8176022100950239,
-    "image": "images/waypoint_02_step_000674.png"
-  },
-  {
-    "id": "waypoint_00",
-    "frame": 138,
-    "timestamp": 1791593301.7307281,
-    "x": 0.7427780295923166,
-    "y": 0.6963799478742316,
-    "image": "images/waypoint_00_step_000138.png"
-  },
-  {
-    "id": "waypoint_00",
-    "frame": 138,
-    "timestamp": 1791593493.524652,
-    "x": 0.7427780295923166,
-    "y": 0.6963799478742316,
-    "image": "images/waypoint_00_step_000138.png"
-  },
-  {
-    "id": "waypoint_01",
-    "frame": 383,
-    "timestamp": 1791593532.0619779,
-    "x": 1.126366910981423,
-    "y": 0.8589770474101354,
-    "image": "images/waypoint_01_step_000383.png"
-  },
-  {
-    "id": "waypoint_02",
-    "frame": 673,
-    "timestamp": 1791593576.5370512,
-    "x": 0.35934925467588275,
-    "y": 0.825179143776642,
-    "image": "images/waypoint_02_step_000673.png"
-  },
-  {
-    "id": "waypoint_00",
-    "frame": 138,
-    "timestamp": 1791594383.265128,
-    "x": 0.7427780295923166,
-    "y": 0.6963799478742316,
-    "image": "images/waypoint_00_step_000138.png"
-  },
-  {
-    "id": "waypoint_00",
-    "frame": 138,
-    "timestamp": 1791594514.3453314,
-    "x": 0.7427780295923166,
-    "y": 0.6963799478742316,
-    "image": "images/waypoint_00_step_000138.png"
-  },
-  {
-    "id": "waypoint_01",
-    "frame": 383,
-    "timestamp": 1791594539.3955836,
-    "x": 1.126366910981423,
-    "y": 0.8589770474101354,
-    "image": "images/waypoint_01_step_000383.png"
->>>>>>> Stashed changes
   }
 ]
