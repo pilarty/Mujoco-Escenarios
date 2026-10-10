@@ -34,7 +34,7 @@ BACKEND_DETECTIONS_URL = "http://localhost:8000/detections"
 BACKEND_ROOM_URL = "http://localhost:8000/room"
 
 # Escenario a cargar
-SCENARIO = "habitacion_daniada"
+SCENARIO = "modular_building"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
 POLICY_ONNX_PATH = "g1_navigation_integration/policy/policy.onnx"
 NAV_CONFIG_PATH = "g1_nav_config.yaml"

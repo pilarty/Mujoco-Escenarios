@@ -9,5 +9,39 @@
     <body name="objeto_dañado" pos="1.5 1.5 0" euler="0 0 0">
       <geom type="mesh" mesh="mi_malla" material="mat_room" contype="0" conaffinity="0"/>
     </body>
+
+    <!-- Iluminacion (Fase A): el setup original (solo headlight + la luz
+         puntual del propio robot en g1.xml) dejaba el piso y buena parte
+         de los objetos completamente negros. Estas 3 luces, dimensionadas
+         para la habitacion real (~3.75 x 3.96 x 2.4 m, ver
+         calcular_room_layout), resuelven eso sin tocar mesh ni texturas:
+         costo ~32ms -> ~71ms por captura (no afecta el step de fisica,
+         las capturas son cada 30-300 steps). Ver auditoria para el detalle
+         de por que <visual><quality offsamples/shadowsize> NO se tocaron
+         (sin diferencia visible en esta escena, solo costo extra). -->
+    <light name="hab_ceiling_1" pos="0.5 0.5 2.3" dir="0 0 -1" diffuse="0.7 0.7 0.65" castshadow="true"/>
+    <light name="hab_ceiling_2" pos="2.5 1.5 2.3" dir="0 0 -1" diffuse="0.6 0.6 0.6" castshadow="true"/>
+    <light name="hab_fill" directional="true" pos="0 0 5" dir="-0.3 -0.2 -1" diffuse="0.25 0.25 0.28" castshadow="false"/>
+
+    <!-- Colision (Fase C): el mesh visual de arriba es contype/conaffinity=0
+         (no colisiona, ver Fase pre-existente de la auditoria). Estos
+         primitivos SI colisionan (contype/conaffinity=1 por defecto) y
+         fueron ubicados con raycasting contra el mesh real (puerta, mueble
+         bajo la pared agrietada, radiador bajo la ventana, escombros/colchon
+         en el piso) para darle a la politica de navegacion obstaculos
+         reales. group="3" (mismo grupo que usa g1.xml para la colision del
+         robot) los mantiene invisibles en las capturas fotorrealistas por
+         defecto; para verlos en un render hay que forzar
+         MjvOption.geomgroup[3]=1. -->
+    <body name="colisiones_habitacion">
+      <geom name="col_puerta" type="box" pos="2.6 1.45 0.97" size="0.08 0.4 0.97"
+            rgba="0.9 0.2 0.2 0.35" group="3"/>
+      <geom name="col_mueble" type="box" pos="1.33 2.15 0.3" size="0.35 0.25 0.3"
+            rgba="0.2 0.6 0.9 0.35" group="3"/>
+      <geom name="col_radiador" type="box" pos="0.35 1.88 0.28" size="0.32 0.12 0.22"
+            rgba="0.2 0.9 0.4 0.35" group="3"/>
+      <geom name="col_escombros" type="box" pos="1.05 1.75 0.15" size="0.35 0.35 0.15"
+            rgba="0.9 0.7 0.2 0.35" group="3"/>
+    </body>
   </worldbody>
 </mujocoinclude>
