@@ -190,5 +190,613 @@
     "x": 0.3555314627527128,
     "y": 0.8176022100950239,
     "image": "images/waypoint_02_step_000674.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 138,
+    "timestamp": 1791660425.512906,
+    "x": 0.7427780295923166,
+    "y": 0.6963799478742316,
+    "image": "images/waypoint_00_step_000138.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 383,
+    "timestamp": 1791660454.0600555,
+    "x": 1.126366910981423,
+    "y": 0.8589770474101354,
+    "image": "images/waypoint_01_step_000383.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 673,
+    "timestamp": 1791660480.2963731,
+    "x": 0.35934925467588275,
+    "y": 0.825179143776642,
+    "image": "images/waypoint_02_step_000673.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 138,
+    "timestamp": 1791673364.3265445,
+    "x": 0.7427780295923166,
+    "y": 0.6963799478742316,
+    "image": "images/waypoint_00_step_000138.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 383,
+    "timestamp": 1791673374.5776448,
+    "x": 1.126366910981423,
+    "y": 0.8589770474101354,
+    "image": "images/waypoint_01_step_000383.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 673,
+    "timestamp": 1791673384.963245,
+    "x": 0.35934925467588275,
+    "y": 0.825179143776642,
+    "image": "images/waypoint_02_step_000673.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 138,
+    "timestamp": 1791673584.1968577,
+    "x": 0.7427780295923166,
+    "y": 0.6963799478742316,
+    "image": "images/waypoint_00_step_000138.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 383,
+    "timestamp": 1791673592.9146044,
+    "x": 1.126366910981423,
+    "y": 0.8589770474101354,
+    "image": "images/waypoint_01_step_000383.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 673,
+    "timestamp": 1791673602.9001412,
+    "x": 0.35934925467588275,
+    "y": 0.825179143776642,
+    "image": "images/waypoint_02_step_000673.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 138,
+    "timestamp": 1791673705.6762652,
+    "x": 0.7427780295923166,
+    "y": 0.6963799478742316,
+    "image": "images/waypoint_00_step_000138.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 383,
+    "timestamp": 1791673711.251382,
+    "x": 1.126366910981423,
+    "y": 0.8589770474101354,
+    "image": "images/waypoint_01_step_000383.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 673,
+    "timestamp": 1791673717.6398008,
+    "x": 0.35934925467588275,
+    "y": 0.825179143776642,
+    "image": "images/waypoint_02_step_000673.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 138,
+    "timestamp": 1791673853.6654005,
+    "x": 0.7427780295923166,
+    "y": 0.6963799478742316,
+    "image": "images/waypoint_00_step_000138.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 383,
+    "timestamp": 1791673859.3197258,
+    "x": 1.126366910981423,
+    "y": 0.8589770474101354,
+    "image": "images/waypoint_01_step_000383.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 673,
+    "timestamp": 1791673865.658162,
+    "x": 0.35934925467588275,
+    "y": 0.825179143776642,
+    "image": "images/waypoint_02_step_000673.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 398,
+    "timestamp": 1791673890.3733332,
+    "x": 2.7644139913704495,
+    "y": 2.6770898329762987,
+    "image": "images/waypoint_00_step_000398.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 863,
+    "timestamp": 1791673900.4417605,
+    "x": 4.7966709749415095,
+    "y": 2.6555460513873346,
+    "image": "images/waypoint_01_step_000863.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1416,
+    "timestamp": 1791673912.24886,
+    "x": 0.3902885498947779,
+    "y": 1.0840132045420856,
+    "image": "images/waypoint_02_step_001416.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 236,
+    "timestamp": 1791674283.5478475,
+    "x": -0.07061386664486877,
+    "y": 2.606472606930228,
+    "image": "images/waypoint_00_step_000236.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 1190,
+    "timestamp": 1791674303.3308954,
+    "x": -2.770254163461103,
+    "y": 2.6735155971947955,
+    "image": "images/waypoint_01_step_001190.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 236,
+    "timestamp": 1791674342.220163,
+    "x": -0.07061386664486877,
+    "y": 2.606472606930228,
+    "image": "images/waypoint_00_step_000236.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 1190,
+    "timestamp": 1791674362.2511103,
+    "x": -2.770254163461103,
+    "y": 2.6735155971947955,
+    "image": "images/waypoint_01_step_001190.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791674450.681578,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 525,
+    "timestamp": 1791674458.0327244,
+    "x": -1.6308497917283795,
+    "y": 1.8508341745402797,
+    "image": "images/waypoint_01_step_000525.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1035,
+    "timestamp": 1791674468.8567166,
+    "x": -1.7840541258685911,
+    "y": -1.6638651231487411,
+    "image": "images/waypoint_02_step_001035.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791674499.2842536,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791674507.6351504,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791674517.2172124,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1404,
+    "timestamp": 1791674525.6156998,
+    "x": -0.3847907533735597,
+    "y": -1.89860624426737,
+    "image": "images/waypoint_03_step_001404.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 1747,
+    "timestamp": 1791674533.1221359,
+    "x": -0.15201509681957398,
+    "y": -0.36781235798126255,
+    "image": "images/waypoint_04_step_001747.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791674562.502146,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791674570.7497587,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791674580.2785778,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1404,
+    "timestamp": 1791674588.620147,
+    "x": -0.3847907533735597,
+    "y": -1.89860624426737,
+    "image": "images/waypoint_03_step_001404.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 1747,
+    "timestamp": 1791674596.0896332,
+    "x": -0.15201509681957398,
+    "y": -0.36781235798126255,
+    "image": "images/waypoint_04_step_001747.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791674701.1488907,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791674709.1312842,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791674718.1307735,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791674816.931275,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791674824.7317555,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791674833.7041824,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1434,
+    "timestamp": 1791674842.1936307,
+    "x": -0.2622386062443204,
+    "y": -3.7015703604006704,
+    "image": "images/waypoint_03_step_001434.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 1771,
+    "timestamp": 1791674849.0439267,
+    "x": 1.6165041960192725,
+    "y": -3.891767990845206,
+    "image": "images/waypoint_04_step_001771.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791675070.5593212,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791675078.3560348,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791675087.3179479,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1434,
+    "timestamp": 1791675095.8090916,
+    "x": -0.2622386062443204,
+    "y": -3.7015703604006704,
+    "image": "images/waypoint_03_step_001434.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791675207.733685,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791675215.588047,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791675224.586552,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1621,
+    "timestamp": 1791675236.9628174,
+    "x": 3.6150186488408806,
+    "y": -1.8962730950398545,
+    "image": "images/waypoint_03_step_001621.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 2117,
+    "timestamp": 1791675247.0119174,
+    "x": 3.821268681808345,
+    "y": 1.643769750603018,
+    "image": "images/waypoint_04_step_002117.png"
+  },
+  {
+    "id": "waypoint_05",
+    "frame": 2551,
+    "timestamp": 1791675255.8274655,
+    "x": 0.3818210383090233,
+    "y": 1.8855162528320355,
+    "image": "images/waypoint_05_step_002551.png"
+  },
+  {
+    "id": "waypoint_06",
+    "frame": 2893,
+    "timestamp": 1791675262.9117043,
+    "x": 0.1551354424348442,
+    "y": 0.36476135073372434,
+    "image": "images/waypoint_06_step_002893.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791675311.7531033,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791675319.7241302,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791675328.7044122,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1621,
+    "timestamp": 1791675340.9707134,
+    "x": 3.6150186488408806,
+    "y": -1.8962730950398545,
+    "image": "images/waypoint_03_step_001621.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 2117,
+    "timestamp": 1791675350.983329,
+    "x": 3.821268681808345,
+    "y": 1.643769750603018,
+    "image": "images/waypoint_04_step_002117.png"
+  },
+  {
+    "id": "waypoint_05",
+    "frame": 2551,
+    "timestamp": 1791675359.846738,
+    "x": 0.3818210383090233,
+    "y": 1.8855162528320355,
+    "image": "images/waypoint_05_step_002551.png"
+  },
+  {
+    "id": "waypoint_06",
+    "frame": 2893,
+    "timestamp": 1791675366.85328,
+    "x": 0.1551354424348442,
+    "y": 0.36476135073372434,
+    "image": "images/waypoint_06_step_002893.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791675901.676863,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791675909.471842,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791675918.571671,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1621,
+    "timestamp": 1791675930.888721,
+    "x": 3.6150186488408806,
+    "y": -1.8962730950398545,
+    "image": "images/waypoint_03_step_001621.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 2117,
+    "timestamp": 1791675940.9949188,
+    "x": 3.821268681808345,
+    "y": 1.643769750603018,
+    "image": "images/waypoint_04_step_002117.png"
+  },
+  {
+    "id": "waypoint_05",
+    "frame": 2551,
+    "timestamp": 1791675949.8699594,
+    "x": 0.3818210383090233,
+    "y": 1.8855162528320355,
+    "image": "images/waypoint_05_step_002551.png"
+  },
+  {
+    "id": "waypoint_06",
+    "frame": 2893,
+    "timestamp": 1791675956.9186869,
+    "x": 0.1551354424348442,
+    "y": 0.36476135073372434,
+    "image": "images/waypoint_06_step_002893.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791676284.0247717,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
+  },
+  {
+    "id": "waypoint_01",
+    "frame": 572,
+    "timestamp": 1791676292.6556869,
+    "x": -2.6201970277966686,
+    "y": 1.8785429581024211,
+    "image": "images/waypoint_01_step_000572.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1016,
+    "timestamp": 1791676302.6957994,
+    "x": -2.88610078862198,
+    "y": -1.6180009479811681,
+    "image": "images/waypoint_02_step_001016.png"
+  },
+  {
+    "id": "waypoint_03",
+    "frame": 1621,
+    "timestamp": 1791676316.2941544,
+    "x": 3.6150186488408806,
+    "y": -1.8962730950398545,
+    "image": "images/waypoint_03_step_001621.png"
+  },
+  {
+    "id": "waypoint_04",
+    "frame": 2117,
+    "timestamp": 1791676327.5947886,
+    "x": 3.821268681808345,
+    "y": 1.643769750603018,
+    "image": "images/waypoint_04_step_002117.png"
+  },
+  {
+    "id": "waypoint_05",
+    "frame": 2551,
+    "timestamp": 1791676337.5980067,
+    "x": 0.3818210383090233,
+    "y": 1.8855162528320355,
+    "image": "images/waypoint_05_step_002551.png"
+  },
+  {
+    "id": "waypoint_06",
+    "frame": 2893,
+    "timestamp": 1791676345.461764,
+    "x": 0.1551354424348442,
+    "y": 0.36476135073372434,
+    "image": "images/waypoint_06_step_002893.png"
+  },
+  {
+    "id": "waypoint_00",
+    "frame": 191,
+    "timestamp": 1791676995.1674137,
+    "x": -0.10284457992595429,
+    "y": 1.6150869314171188,
+    "image": "images/waypoint_00_step_000191.png"
   }
 ]

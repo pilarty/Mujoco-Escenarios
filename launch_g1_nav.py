@@ -23,6 +23,7 @@ import onnxruntime as ort
 import yaml
 import requests
 from PIL import Image
+import threading
 
 # Agregar simulaciones/g1_conectado al path para importar calcular_room_layout
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -30,11 +31,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
 from extraer_dimensiones_CONECTADO import calcular_room_layout
 
 # Backend URLs
-BACKEND_DETECTIONS_URL = "http://localhost:8000/detections"
-BACKEND_ROOM_URL = "http://localhost:8000/room"
-BACKEND_MISSION_URL = "http://localhost:8000/mission"
-BACKEND_MISSION_STATUS_URL = "http://localhost:8000/mission/status"
-
+BACKEND_DETECTIONS_URL = "http://127.0.0.1:8000/detections"
+BACKEND_ROOM_URL = "http://127.0.0.1:8000/room"
+BACKEND_MISSION_URL = "http://127.0.0.1:8000/mission"
+BACKEND_MISSION_STATUS_URL = "http://127.0.0.1:8000/mission/status"
 # Escenario a cargar
 SCENARIO = "modular_building"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
@@ -72,6 +72,15 @@ JOINT_NAMES = [
 ]
 
 GRAVITY_WORLD = np.array([0.0, 0.0, -1.0])
+LIDAR_BODY = "torso_link"
+LIDAR_OFFSET = np.array([0.12, 0.0, 0.23])  # mismo punto que head_camera, en el marco del torso
+LIDAR_HZ = 10.0
+LIDAR_RANGE = (0.1, 20.0)  # m
+LIDAR_GEOMGROUP = np.array([1, 1, 0, 0, 0, 0], dtype=np.uint8)  # solo entorno, no el robot
+RGBD_CAMERA = "head_camera"
+RGBD_HZ = 2.0
+RGBD_SIZE = (240, 320)  # alto, ancho
+RGBD_DEPTH_MAX = 10.0  # m; mas lejos se marca como invalido (inf)
 
 
 def clamp(value, lo, hi):
@@ -243,6 +252,51 @@ def get_base_ang_vel(data, addr):
     return data.sensordata[addr["gyro_adr"]: addr["gyro_adr"] + 3].copy()
 
 
+def lidar_init(model):
+    az = np.deg2rad(np.arange(0.0, 360.0, 1.0))
+    el = np.deg2rad(np.linspace(-7.0, 52.0, 16))
+    A, E = np.meshgrid(az, el)
+    dirs = np.stack([np.cos(E) * np.cos(A), np.cos(E) * np.sin(A), np.sin(E)], axis=-1).reshape(-1, 3)
+    return {"dirs": dirs, "n": len(dirs),
+            "body_id": mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, LIDAR_BODY),
+            "geomid": np.zeros(len(dirs), dtype=np.int32),
+            "dist": np.zeros(len(dirs), dtype=np.float64)}
+
+
+def lidar_scan(model, data, lid):
+    R = data.xmat[lid["body_id"]].reshape(3, 3)
+    origin = data.xpos[lid["body_id"]] + R @ LIDAR_OFFSET
+    vec = (lid["dirs"] @ R.T).reshape(-1)
+    mujoco.mj_multiRay(model, data, origin, vec, LIDAR_GEOMGROUP, 1, -1,
+                       lid["geomid"], lid["dist"], None, lid["n"], LIDAR_RANGE[1])
+    ranges = np.where(lid["geomid"] >= 0, lid["dist"], np.inf)
+    ranges[ranges < LIDAR_RANGE[0]] = np.inf
+    return ranges.astype(np.float32), origin
+
+
+def rgbd_init(model):
+    r = mujoco.Renderer(model, RGBD_SIZE[0], RGBD_SIZE[1])
+    # sombras/reflejos/cielo apagados: no aportan al sensor y son lo mas caro del render
+    for f in (mujoco.mjtRndFlag.mjRND_SHADOW, mujoco.mjtRndFlag.mjRND_REFLECTION,
+              mujoco.mjtRndFlag.mjRND_SKYBOX, mujoco.mjtRndFlag.mjRND_HAZE):
+        r.scene.flags[f] = 0
+    return r
+
+
+def rgbd_capture(data, r):
+    r.disable_depth_rendering()
+    r.update_scene(data, camera=RGBD_CAMERA)
+    rgb = r.render().copy()
+    opt = mujoco.MjvOption()
+    opt.geomgroup[2] = 0  # esconde el robot (grupo visual) para que no aparezca en la profundidad
+    r.enable_depth_rendering()
+    r.update_scene(data, camera=RGBD_CAMERA, scene_option=opt)
+    depth = r.render().copy()
+    r.disable_depth_rendering()
+    depth[depth > RGBD_DEPTH_MAX] = np.inf
+    return rgb, depth
+
+
 def nav_velocity_command(base_pos, quat, waypoints, nav_state, nav_params, vel_ranges,
                           arrival_radius, pause_duration, sim_time):
     """Port directo de navigation_velocity_commands (State_RLBase.cpp)."""
@@ -355,6 +409,10 @@ def main():
     addr = resolve_joint_addresses(model)
     apply_pd_gains(model, addr, stiffness, damping)
     init_state(model, data, addr, default_joint_pos)
+    lid = lidar_init(model)
+    lidar_every = max(1, round(1.0 / (LIDAR_HZ * control_dt)))
+    rgbd_r = rgbd_init(model)
+    rgbd_every = max(1, round(1.0 / (RGBD_HZ * control_dt)))
 
     # Renderer para captura de fotos desde la cámara del robot
     renderer = mujoco.Renderer(model, 480, 640)
@@ -385,6 +443,10 @@ def main():
     print(f"[g1_nav] waypoints={waypoints} arrival_radius={arrival_radius} pause_duration={pause_duration}")
 
     step_count = 0
+    t_iter = time.perf_counter()
+    t_next = time.perf_counter()
+    t_log, sim_log = time.perf_counter(), 0.0
+    worst = {"iter": 0.0, "sync": 0.0}
     log_every = max(1, round(1.0 / control_dt))
     fallen_warned = False
     captured_at_waypoints = set()  # Para evitar capturas duplicadas en el mismo waypoint
@@ -413,7 +475,9 @@ def main():
 
             for _ in range(decimation):
                 mujoco.mj_step(model, data)
+            _t = time.perf_counter()
             viewer.sync()
+            worst["sync"] = max(worst["sync"], time.perf_counter() - _t)
 
             # Capturar foto al llegar a cada waypoint (solo una vez por waypoint)
             wp_idx = nav_state["current_idx"]
@@ -436,7 +500,7 @@ def main():
                     "image": f"images/{nombre_imagen}",
                 }
                 guardar_captura(registro)
-                enviar_a_backend(registro, img)
+                threading.Thread(target=enviar_a_backend, args=(registro, img), daemon=True).start()
                 print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
                 reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
@@ -447,6 +511,12 @@ def main():
             elif projected_gravity[2] <= -0.3:
                 fallen_warned = False
 
+            if step_count % lidar_every == 0:
+                ranges, lidar_origin = lidar_scan(model, data, lid)
+
+            if step_count % rgbd_every == 0:
+                rgb, depth = rgbd_capture(data, rgbd_r)
+
             step_count += 1
             if step_count % log_every == 0:
                 wp_idx = min(nav_state["current_idx"], len(waypoints) - 1)
@@ -456,9 +526,27 @@ def main():
                     f"cmd=({nav_cmd[0]:.2f},{nav_cmd[1]:.2f},{nav_cmd[2]:.2f}) "
                     f"waiting={nav_state['waiting_at_waypoint']}"
                 )
+                print(f"[g1_nav] peor iteracion={1000*worst['iter']:.0f} ms, peor sync={1000*worst['sync']:.0f} ms")
+                worst["iter"] = worst["sync"] = 0.0
+                _w = time.perf_counter()
+                print(f"[g1_nav] velocidad real = {(data.time - sim_log) / (_w - t_log):.2f}x")
+                t_log, sim_log = _w, data.time
+                hits = np.isfinite(ranges)
+                if hits.any():
+                    print(f"[g1_nav] lidar: {hits.sum()}/{ranges.size} impactos, min={ranges[hits].min():.2f} m")
+                ok = np.isfinite(depth)
+                if ok.any():
+                    print(f"[g1_nav] rgbd: {ok.mean() * 100:.0f}% pixeles validos, profundidad min={depth[ok].min():.2f} m, mediana={np.median(depth[ok]):.2f} m")
                 reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
-            time.sleep(control_dt)
+            worst["iter"] = max(worst["iter"], time.perf_counter() - t_iter)
+            t_next += control_dt
+            resto = t_next - time.perf_counter()
+            if resto > 0:
+                time.sleep(resto)
+            else:
+                t_next = time.perf_counter()  # si se atrasa, no intenta recuperar de golpe
+            t_iter = time.perf_counter()
 
 
 if __name__ == "__main__":
