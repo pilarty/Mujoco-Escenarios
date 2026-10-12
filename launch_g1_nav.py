@@ -16,6 +16,7 @@ import json
 import io
 import base64
 
+import mapa_vivo
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -105,7 +106,7 @@ def guardar_captura(registro):
 
 
 def planificar_destino(destino):
-    """Ruta hasta 'destino' (x, y del mundo) sobre el ultimo mapa guardado en mapas/. Devuelve la lista de waypoints."""
+    """Ruta hasta 'destino' (x, y del mundo) sobre el ultimo mapa guardado en mapas/. Devuelve (waypoints, L, lo)."""
     import glob
     import planificador
     def es_de_este_escenario(f):
@@ -120,7 +121,7 @@ def planificar_destino(destino):
     if wp is None:
         raise SystemExit(f"[g1_nav] no se pudo planificar hasta {destino}: {msg}")
     print(f"[g1_nav] ruta planificada hasta {destino} sobre {os.path.basename(mapas[-1])}: {len(wp)} waypoints {msg}")
-    return (wp + off).tolist()
+    return (wp + off).tolist(), L, lo
 
 
 def cargar_mision(nav_config_path):
@@ -192,11 +193,17 @@ def build_model():
     
     rel_path = os.path.relpath(escenario_dir, unitree_dir).replace("\\", "/")
     
+    # obstaculos sorpresa (no estan en el mapa): se declaran en g1_nav_config.yaml como [x, y, medio_ancho_x, medio_ancho_y, medio_alto]
+    obstaculos_xml = ""
+    for i, (ox, oy, hx, hy, hz) in enumerate(load_yaml(NAV_CONFIG_PATH).get("obstaculos") or []):
+        obstaculos_xml += (f'  <worldbody><geom name="sorpresa_{i}" type="box" pos="{ox} {oy} {hz}" '
+                           f'size="{hx} {hy} {hz}" rgba="0.8 0.3 0.2 1"/></worldbody>\n')
+
     xml_content = f"""
 <mujoco model="g1 con {SCENARIO}">
   <include file="scene.xml"/>
   <include file="{rel_path}/escenario.xml"/>
-</mujoco>
+{obstaculos_xml}</mujoco>
 """
 
     original_dir = os.getcwd()
@@ -486,8 +493,9 @@ def main():
 
     waypoints, arrival_radius, pause_duration = cargar_mision(NAV_CONFIG_PATH)
     destino = load_yaml(NAV_CONFIG_PATH).get("destino")   # si esta, manda sobre los waypoints de arriba
+    L_mapa = lo_mapa = None
     if destino:
-        waypoints = planificar_destino(destino)
+        waypoints, L_mapa, lo_mapa = planificar_destino(destino)
 
     model, data = build_model()
     addr = resolve_joint_addresses(model)
@@ -497,6 +505,10 @@ def main():
     lidar_every = max(1, round(1.0 / (LIDAR_HZ * control_dt)))
     rgbd_r = rgbd_init(model)
     rgbd_every = max(1, round(1.0 / (RGBD_HZ * control_dt)))
+    cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, RGBD_CAMERA)
+    f_cam = (RGBD_SIZE[0] / 2) / math.tan(math.radians(model.cam_fovy[cam_id]) / 2)
+    off_mapa = LIDAR_OFFSET[:2]
+    vivo = mapa_vivo.vivo_crear(L_mapa) if destino else None   # mapa de obstaculos en vivo (solo con ruta planificada)
     guardar_calibracion(model, lid, os.path.join(PROJECT_ROOT, "sensores.json"))
     rec = {"t": [], "torso_pos": [], "torso_mat": [], "imu": [], "lidar_idx": [], "lidar": [],
            "rgbd_idx": [], "rgb": [], "depth": []}
@@ -604,9 +616,14 @@ def main():
 
             if step_count % lidar_every == 0:
                 ranges, lidar_origin = lidar_scan(model, data, lid)
+                if vivo is not None:
+                    mapa_vivo.vivo_agregar(vivo, lo_mapa, off_mapa, mapa_vivo.puntos_lidar(
+                        data, lid["body_id"], lid["dirs"], lidar_origin, ranges, LIDAR_RANGE[1]))
 
             if step_count % rgbd_every == 0:
                 rgb, depth = rgbd_capture(data, rgbd_r)
+                if vivo is not None:
+                    mapa_vivo.vivo_agregar(vivo, lo_mapa, off_mapa, mapa_vivo.puntos_profundidad(data, cam_id, depth, f_cam))
 
             if GRABAR:
                 rec["t"].append(data.time)
@@ -641,6 +658,17 @@ def main():
                 ok = np.isfinite(depth)
                 if ok.any():
                     print(f"[g1_nav] rgbd: {ok.mean() * 100:.0f}% pixeles validos, profundidad min={depth[ok].min():.2f} m, mediana={np.median(depth[ok]):.2f} m")
+                if vivo is not None:
+                    nuevas = mapa_vivo.obstaculos_nuevos(vivo, L_mapa)
+                    print(f"[g1_nav] obstaculos nuevos (no estan en el mapa): {int(nuevas.sum())} celdas")
+                    if nuevas.any():
+                        wp_nuevos, msg_rp = mapa_vivo.replanificar(L_mapa, lo_mapa, off_mapa, nuevas, base_pos[:2], waypoints, nav_state["current_idx"], destino)
+                        if wp_nuevos is not None:
+                            waypoints[:] = wp_nuevos
+                            nav_state["current_idx"] = 0
+                            print(f"[g1_nav] ruta bloqueada por obstaculo nuevo: replanificada, {len(waypoints)} waypoints {msg_rp}")
+                        elif msg_rp:
+                            print(f"[g1_nav] ruta bloqueada por obstaculo nuevo y no hay otra: {msg_rp}")
                 reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
             worst["iter"] = max(worst["iter"], time.perf_counter() - t_iter)
@@ -651,6 +679,14 @@ def main():
             else:
                 t_next = time.perf_counter()  # si se atrasa, no intenta recuperar de golpe
             t_iter = time.perf_counter()
+
+    if vivo is not None:
+        from mapa_ocupacion import dibujar
+        nuevas = mapa_vivo.obstaculos_nuevos(vivo, L_mapa)
+        png = os.path.join(PROJECT_ROOT, "mapas", f"vivo_{time.strftime('%Y%m%d_%H%M%S')}.png")
+        dibujar(L_mapa, lo_mapa, np.array(rec["torso_pos"])[:, :2] - off_mapa if rec["torso_pos"] else np.zeros((2, 2)),
+                np.array(waypoints) - off_mapa, png, nuevas=nuevas)
+        print(f"[g1_nav] mapa en vivo guardado: {png} ({int(nuevas.sum())} celdas nuevas en magenta)")
 
     if GRABAR:
         ruta = os.path.join(PROJECT_ROOT, "grabaciones", f"corrida_{time.strftime('%Y%m%d_%H%M%S')}.npz")

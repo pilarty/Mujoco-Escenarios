@@ -16,4 +16,6 @@ arrival_radius: 0.4
 # política sigue en control (marcha en el lugar), no hay hand-off a un
 # controlador rígido.
 pause_duration: 3.0
-destino: [-3.0, 2.0]
+destino: [4.0, -3.0]
+# Obstaculos que NO estan en el mapa (sorpresa): [x, y, medio_ancho_x, medio_ancho_y, medio_alto]
+obstaculos: [[2.8, 0.0, 0.4, 0.4, 0.4]]

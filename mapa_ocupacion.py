@@ -70,11 +70,13 @@ def construir_mapa(barridos, xy0, c, s):
     return L, lo, tr
 
 
-def dibujar(L, lo, trayecto, waypoints, ruta_png, px_por_m=40, trayecto_ref=None):
+def dibujar(L, lo, trayecto, waypoints, ruta_png, px_por_m=40, trayecto_ref=None, nuevas=None):
     f = px_por_m * RES
     img = np.full(L.shape + (3,), 160, np.uint8)       # gris = desconocido
     img[L < -0.2] = (255, 255, 255)                    # blanco = libre
     img[L > UMBRAL_OCC] = (0, 0, 0)                    # negro = ocupado
+    if nuevas is not None:
+        img[nuevas] = (255, 0, 255)                    # magenta = obstaculo que el mapa guardado no tenia
     img = cv2.resize(img, None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST)
     def px(a):
         return np.round((a - lo) / RES * f).astype(np.int32)
