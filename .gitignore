@@ -19,3 +19,6 @@ Thumbs.db
 LocoMuJoCo_recordings/
 training/imitation/
 training/smoke_test*.txt
+grabaciones/
+mapas/
+simulaciones/g1_saca_fotos/reporte/images/

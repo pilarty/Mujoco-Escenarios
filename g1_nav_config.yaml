@@ -3,8 +3,8 @@
 # g1_navigation_integration/policy/deploy.yaml y no se duplica acá.)
 
 # Secuencia de objetivos (x, y) en el mundo, caminados en orden.
-waypoints: [[0.0, 2.0], [-3.0, 2.0], [-3.0, -2.0], [4.0, -2.0], [4.0, 2.0], [0.0, 2.0], [0.0, 0.0]]
-
+#waypoints: [[0.0, 2.0], [-3.0, 2.0], [-3.0, -2.0], [4.0, -2.0], [4.0, 2.0], [0.0, 2.0], [0.0, 0.0]]
+waypoints: [[0.0, 2.8], [3.0, 2.8], [3.0, -2.5], [3.0, 2.8], [0.0, 2.8], [0.0, -2.8], [-3.0, -2.8], [-3.0, 2.0]]
 # Distancia (m) al waypoint actual por debajo de la cual se considera
 # "llegada" y arranca la pausa. Más laxo que el goal_tolerance interno
 # de deploy.yaml (0.2) porque el control proporcional converge de forma
@@ -16,3 +16,4 @@ arrival_radius: 0.4
 # política sigue en control (marcha en el lugar), no hay hand-off a un
 # controlador rígido.
 pause_duration: 3.0
+destino: [-3.0, 2.0]

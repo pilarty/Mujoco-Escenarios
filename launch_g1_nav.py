@@ -36,7 +36,7 @@ BACKEND_ROOM_URL = "http://127.0.0.1:8000/room"
 BACKEND_MISSION_URL = "http://127.0.0.1:8000/mission"
 BACKEND_MISSION_STATUS_URL = "http://127.0.0.1:8000/mission/status"
 # Escenario a cargar
-SCENARIO = "modular_building"
+SCENARIO = "oficina_s"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
 POLICY_ONNX_PATH = "g1_navigation_integration/policy/policy.onnx"
 NAV_CONFIG_PATH = "g1_nav_config.yaml"
@@ -79,6 +79,7 @@ LIDAR_RANGE = (0.1, 20.0)  # m
 LIDAR_GEOMGROUP = np.array([1, 1, 0, 0, 0, 0], dtype=np.uint8)  # solo entorno, no el robot
 RGBD_CAMERA = "head_camera"
 RGBD_HZ = 2.0
+GRABAR = True  # guarda la corrida en grabaciones/*.npz (entrada para el SLAM)
 RGBD_SIZE = (240, 320)  # alto, ancho
 RGBD_DEPTH_MAX = 10.0  # m; mas lejos se marca como invalido (inf)
 
@@ -101,6 +102,25 @@ def guardar_captura(registro):
     capturas.append(registro)
     with open(CAPTURAS_JSON, "w", encoding="utf-8") as f:
         json.dump(capturas, f, ensure_ascii=False, indent=2)
+
+
+def planificar_destino(destino):
+    """Ruta hasta 'destino' (x, y del mundo) sobre el ultimo mapa guardado en mapas/. Devuelve la lista de waypoints."""
+    import glob
+    import planificador
+    def es_de_este_escenario(f):
+        m = np.load(f)
+        return "escenario" in m.files and str(m["escenario"]) == SCENARIO
+    mapas = [f for f in sorted(glob.glob(os.path.join(PROJECT_ROOT, "mapas", "*_mapa_estimado.npz"))) if es_de_este_escenario(f)]
+    if not mapas:
+        raise SystemExit(f"[g1_nav] no hay ningun mapa de {SCENARIO} en mapas/: graba una corrida y corre mapa_ocupacion.py y odometria_lidar.py")
+    L, lo, _ = planificador.cargar_mapa(mapas[-1])
+    off = LIDAR_OFFSET[:2]   # el mapa tiene su origen en el LiDAR del primer barrido; el robot nace en (0,0) del mundo
+    wp, _, msg = planificador.planificar(L, lo, -off, np.asarray(destino, dtype=float) - off)
+    if wp is None:
+        raise SystemExit(f"[g1_nav] no se pudo planificar hasta {destino}: {msg}")
+    print(f"[g1_nav] ruta planificada hasta {destino} sobre {os.path.basename(mapas[-1])}: {len(wp)} waypoints {msg}")
+    return (wp + off).tolist()
 
 
 def cargar_mision(nav_config_path):
@@ -271,6 +291,7 @@ def lidar_scan(model, data, lid):
                        lid["geomid"], lid["dist"], None, lid["n"], LIDAR_RANGE[1])
     ranges = np.where(lid["geomid"] >= 0, lid["dist"], np.inf)
     ranges[ranges < LIDAR_RANGE[0]] = np.inf
+    ranges[ranges > LIDAR_RANGE[1]] = np.inf
     return ranges.astype(np.float32), origin
 
 
@@ -295,6 +316,64 @@ def rgbd_capture(data, r):
     r.disable_depth_rendering()
     depth[depth > RGBD_DEPTH_MAX] = np.inf
     return rgb, depth
+
+def guardar_calibracion(model, lid, ruta):
+    """Escribe sensores.json: donde esta cada sensor respecto de la base e intrinsecas de la camara."""
+    cid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, RGBD_CAMERA)
+    h, w = RGBD_SIZE
+    f = (h / 2) / math.tan(math.radians(model.cam_fovy[cid]) / 2)
+    el = np.unique(np.round(np.degrees(np.arcsin(lid["dirs"][:, 2])), 3))
+    calib = {
+        "tiempo": "segundos de simulacion (data.time)",
+        "marco_base": LIDAR_BODY,
+        "lidar": {
+            "pos_en_base_m": LIDAR_OFFSET.tolist(),
+            "orientacion": "mismos ejes que la base",
+            "hz": LIDAR_HZ,
+            "rango_m": list(LIDAR_RANGE),
+            "rayos_por_giro": int(lid["n"] // len(el)),
+            "elevaciones_grados": el.tolist(),
+        },
+        "rgbd": {
+            "camara": RGBD_CAMERA,
+            "pos_en_base_m": model.cam_pos[cid].tolist(),
+            "quat_wxyz_en_base": model.cam_quat[cid].tolist(),
+            "convencion": "MuJoCo: la camara mira por -Z, X a la derecha, Y arriba",
+            "hz": RGBD_HZ,
+            "alto": h, "ancho": w,
+            "fx": f, "fy": f, "cx": w / 2, "cy": h / 2,
+            "profundidad_max_m": RGBD_DEPTH_MAX,
+        },
+        "imu": {
+            "torso": ["imu-torso-angular-velocity", "imu-torso-linear-acceleration"],
+            "pelvis": ["imu-pelvis-angular-velocity", "imu-pelvis-linear-acceleration"],
+        },
+    }
+    with open(ruta, "w", encoding="utf-8") as fh:
+        json.dump(calib, fh, indent=2, ensure_ascii=False)
+    print(f"[g1_nav] calibracion de sensores guardada en {ruta}")
+
+
+def guardar_grabacion(ruta, rec, waypoints):
+    """Guarda lo grabado en un .npz. Todos los tiempos son segundos de simulacion (data.time)."""
+    if not rec["t"]:
+        return
+    os.makedirs(os.path.dirname(ruta), exist_ok=True)
+    np.savez_compressed(
+        ruta,
+        t=np.array(rec["t"]),  # una fila por paso de control (50 Hz)
+        torso_pos=np.array(rec["torso_pos"]),  # posicion real del torso en el mundo (verdad terreno)
+        torso_mat=np.array(rec["torso_mat"]).reshape(-1, 3, 3),  # orientacion real del torso
+        imu=np.array(rec["imu"], dtype=np.float32),  # giro y aceleracion: torso(3+3) y pelvis(3+3)
+        lidar_idx=np.array(rec["lidar_idx"]),  # a que fila de t corresponde cada barrido
+        lidar=np.array(rec["lidar"]),  # distancias en m (inf = sin impacto)
+        rgbd_idx=np.array(rec["rgbd_idx"]),  # a que fila de t corresponde cada imagen
+        rgb=np.array(rec["rgb"]),
+        depth=np.array(rec["depth"]),  # en m, float16 (inf = invalido)
+        waypoints=np.array(waypoints),
+        escenario=np.array(SCENARIO),
+    )
+    print(f"[g1_nav] grabacion guardada: {ruta} ({len(rec['t'])} pasos, {len(rec['lidar'])} barridos, {len(rec['rgb'])} imagenes)")
 
 
 def nav_velocity_command(base_pos, quat, waypoints, nav_state, nav_params, vel_ranges,
@@ -328,7 +407,9 @@ def nav_velocity_command(base_pos, quat, waypoints, nav_state, nav_params, vel_r
     waypoints_remaining = (idx + 1) < len(waypoints)
     cmd = np.zeros(3)
 
-    if distance <= arrival_radius:
+    if distance <= arrival_radius and waypoints_remaining and nav_state["solo_pausa_final"]:
+        nav_state["current_idx"] += 1   # waypoint intermedio de una ruta planificada: sigue de largo, sin pausa
+    elif distance <= arrival_radius:
         if not nav_state["waiting_at_waypoint"]:
             nav_state["waiting_at_waypoint"] = True
             nav_state["arrived_time"] = sim_time
@@ -404,6 +485,9 @@ def main():
     control_dt = deploy_cfg["step_dt"]
 
     waypoints, arrival_radius, pause_duration = cargar_mision(NAV_CONFIG_PATH)
+    destino = load_yaml(NAV_CONFIG_PATH).get("destino")   # si esta, manda sobre los waypoints de arriba
+    if destino:
+        waypoints = planificar_destino(destino)
 
     model, data = build_model()
     addr = resolve_joint_addresses(model)
@@ -413,6 +497,12 @@ def main():
     lidar_every = max(1, round(1.0 / (LIDAR_HZ * control_dt)))
     rgbd_r = rgbd_init(model)
     rgbd_every = max(1, round(1.0 / (RGBD_HZ * control_dt)))
+    guardar_calibracion(model, lid, os.path.join(PROJECT_ROOT, "sensores.json"))
+    rec = {"t": [], "torso_pos": [], "torso_mat": [], "imu": [], "lidar_idx": [], "lidar": [],
+           "rgbd_idx": [], "rgb": [], "depth": []}
+    imu_names = ("imu-torso-angular-velocity", "imu-torso-linear-acceleration",
+                 "imu-pelvis-angular-velocity", "imu-pelvis-linear-acceleration")
+    imu_adr = [model.sensor_adr[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SENSOR, n)] for n in imu_names]
 
     # Renderer para captura de fotos desde la cámara del robot
     renderer = mujoco.Renderer(model, 480, 640)
@@ -436,6 +526,7 @@ def main():
         "waiting_at_waypoint": False,
         "arrived_time": 0.0,
         "smoothed_cmd": np.zeros(3),
+        "solo_pausa_final": bool(destino),   # ruta planificada: pausa y foto solo en el ultimo waypoint
     }
     phase_state = {"global_phase": 0.0}
     last_action = np.zeros(29, dtype=np.float64)
@@ -517,6 +608,19 @@ def main():
             if step_count % rgbd_every == 0:
                 rgb, depth = rgbd_capture(data, rgbd_r)
 
+            if GRABAR:
+                rec["t"].append(data.time)
+                rec["torso_pos"].append(data.xpos[lid["body_id"]].copy())
+                rec["torso_mat"].append(data.xmat[lid["body_id"]].copy())
+                rec["imu"].append(np.concatenate([data.sensordata[a:a + 3] for a in imu_adr]))
+                if step_count % lidar_every == 0:
+                    rec["lidar_idx"].append(len(rec["t"]) - 1)
+                    rec["lidar"].append(ranges)
+                if step_count % rgbd_every == 0:
+                    rec["rgbd_idx"].append(len(rec["t"]) - 1)
+                    rec["rgb"].append(rgb)
+                    rec["depth"].append(depth.astype(np.float16))
+
             step_count += 1
             if step_count % log_every == 0:
                 wp_idx = min(nav_state["current_idx"], len(waypoints) - 1)
@@ -547,6 +651,10 @@ def main():
             else:
                 t_next = time.perf_counter()  # si se atrasa, no intenta recuperar de golpe
             t_iter = time.perf_counter()
+
+    if GRABAR:
+        ruta = os.path.join(PROJECT_ROOT, "grabaciones", f"corrida_{time.strftime('%Y%m%d_%H%M%S')}.npz")
+        guardar_grabacion(ruta, rec, waypoints)
 
 
 if __name__ == "__main__":
