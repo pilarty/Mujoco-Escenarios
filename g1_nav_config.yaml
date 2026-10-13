@@ -20,3 +20,6 @@ destino: [4.0, -3.0]
 # Obstaculos que NO estan en el mapa (sorpresa): [x, y, medio_ancho_x, medio_ancho_y, medio_alto]
 obstaculos: [[2.8, 0.0, 0.4, 0.4, 0.4]]
 pose_estimada: true
+gyro_sesgo_grados_s: 0.5
+gyro_ruido_rad_s: 0.005
+corregir_rumbo: true

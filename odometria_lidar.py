@@ -40,9 +40,11 @@ def un_punto_por_celda(p):
     return p[u]
 
 
-def calzar(src, mapa, th, tr, iters=20, dmax=DMAX_INICIAL):
+def calzar(src, mapa, th, tr, iters=20, dmax=DMAX_INICIAL, corregir_rumbo=None):
     """ICP 2D: busca el giro 'th' y el desplazamiento 'tr' que acercan los puntos 'src' al 'mapa'."""
     arbol = cKDTree(mapa)
+    if corregir_rumbo is None:
+        corregir_rumbo = CORREGIR_RUMBO
     for _ in range(iters):
         c, s = np.cos(th), np.sin(th)
         p = src @ np.array([[c, -s], [s, c]]).T + tr
@@ -52,7 +54,7 @@ def calzar(src, mapa, th, tr, iters=20, dmax=DMAX_INICIAL):
             return th, tr, False
         a, b = p[m], mapa[idx[m]]
         ca, cb = a.mean(0), b.mean(0)
-        if CORREGIR_RUMBO:
+        if corregir_rumbo:
             U, _, Vt = np.linalg.svd((a - ca).T @ (b - cb))
             Rd = Vt.T @ U.T
             if np.linalg.det(Rd) < 0:

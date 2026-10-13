@@ -510,7 +510,12 @@ def main():
     f_cam = (RGBD_SIZE[0] / 2) / math.tan(math.radians(model.cam_fovy[cam_id]) / 2)
     off_mapa = LIDAR_OFFSET[:2]
     vivo = mapa_vivo.vivo_crear(L_mapa) if destino else None   # mapa de obstaculos en vivo (solo con ruta planificada)
-    loc = localizacion.loc_crear(L_mapa, lo_mapa) if destino else None   # pose estimada con LiDAR + mapa
+    cfg_nav = load_yaml(NAV_CONFIG_PATH)
+    loc = localizacion.loc_crear(L_mapa, lo_mapa, cfg_nav.get("gyro_sesgo_grados_s", 0.0), cfg_nav.get("gyro_ruido_rad_s", 0.0),
+                                 bool(cfg_nav.get("corregir_rumbo"))) if destino else None   # pose estimada con LiDAR + mapa
+    if loc is not None:
+        print(f"[g1_nav] giroscopio simulado: sesgo {cfg_nav.get('gyro_sesgo_grados_s', 0.0)} grados/s, ruido {cfg_nav.get('gyro_ruido_rad_s', 0.0)} rad/s; "
+              f"correccion de rumbo con LiDAR: {'SI' if loc['corregir'] else 'no'}")
     usar_estimada = bool(loc is not None and load_yaml(NAV_CONFIG_PATH).get("pose_estimada"))   # True: el control usa la pose estimada, no la real
     if usar_estimada:
         print("[g1_nav] navegando con la pose ESTIMADA (giroscopio + LiDAR + mapa), no con la del simulador")

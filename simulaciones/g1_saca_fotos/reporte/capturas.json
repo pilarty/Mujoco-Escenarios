@@ -1246,5 +1246,37 @@
     "x": 3.9900907573130113,
     "y": -2.6036182548766034,
     "image": "images/waypoint_02_step_001061.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1011,
+    "timestamp": 1791926860.3240654,
+    "x": 3.9439142349577687,
+    "y": -2.595161572600423,
+    "image": "images/waypoint_02_step_001011.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1011,
+    "timestamp": 1791926952.5855544,
+    "x": 3.9439142349577687,
+    "y": -2.595161572600423,
+    "image": "images/waypoint_02_step_001011.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1011,
+    "timestamp": 1791927184.9733844,
+    "x": 3.9439142349577687,
+    "y": -2.595161572600423,
+    "image": "images/waypoint_02_step_001011.png"
+  },
+  {
+    "id": "waypoint_02",
+    "frame": 1051,
+    "timestamp": 1791927248.2441463,
+    "x": 3.993001888187042,
+    "y": -2.6010758418984574,
+    "image": "images/waypoint_02_step_001051.png"
   }
 ]
