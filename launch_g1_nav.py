@@ -17,6 +17,7 @@ import io
 import base64
 
 import mapa_vivo
+import localizacion
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -509,6 +510,10 @@ def main():
     f_cam = (RGBD_SIZE[0] / 2) / math.tan(math.radians(model.cam_fovy[cam_id]) / 2)
     off_mapa = LIDAR_OFFSET[:2]
     vivo = mapa_vivo.vivo_crear(L_mapa) if destino else None   # mapa de obstaculos en vivo (solo con ruta planificada)
+    loc = localizacion.loc_crear(L_mapa, lo_mapa) if destino else None   # pose estimada con LiDAR + mapa
+    usar_estimada = bool(loc is not None and load_yaml(NAV_CONFIG_PATH).get("pose_estimada"))   # True: el control usa la pose estimada, no la real
+    if usar_estimada:
+        print("[g1_nav] navegando con la pose ESTIMADA (giroscopio + LiDAR + mapa), no con la del simulador")
     guardar_calibracion(model, lid, os.path.join(PROJECT_ROOT, "sensores.json"))
     rec = {"t": [], "torso_pos": [], "torso_mat": [], "imu": [], "lidar_idx": [], "lidar": [],
            "rgbd_idx": [], "rgb": [], "depth": []}
@@ -557,11 +562,14 @@ def main():
     with mujoco.viewer.launch_passive(model, data) as viewer:
         while viewer.is_running():
             base_pos, quat = get_base_pose(data, addr)
+            quat_nav = quat   # la politica sigue recibiendo la orientacion real (IMU); solo la navegacion usa la estimada
+            if usar_estimada:
+                base_pos, quat_nav = localizacion.loc_pose_base(loc, off_mapa, LIDAR_OFFSET)
             joint_pos = data.qpos[addr["qpos_adr"]]
             joint_vel = data.qvel[addr["dof_adr"]]
 
             nav_cmd, distance, yaw = nav_velocity_command(
-                base_pos, quat, waypoints, nav_state, nav_params, vel_ranges,
+                base_pos, quat_nav, waypoints, nav_state, nav_params, vel_ranges,
                 arrival_radius, pause_duration, data.time,
             )
             gait_phase_obs = navigation_gait_phase(gait_period, control_dt, phase_state, nav_cmd)
@@ -619,11 +627,17 @@ def main():
                 if vivo is not None:
                     mapa_vivo.vivo_agregar(vivo, lo_mapa, off_mapa, mapa_vivo.puntos_lidar(
                         data, lid["body_id"], lid["dirs"], lidar_origin, ranges, LIDAR_RANGE[1]))
+                if loc is not None:
+                    localizacion.loc_barrido(loc, lid["dirs"], ranges, LIDAR_RANGE[1], lidar_origin[:2] - off_mapa,
+                                             data.xmat[lid["body_id"]].reshape(3, 3))
 
             if step_count % rgbd_every == 0:
                 rgb, depth = rgbd_capture(data, rgbd_r)
                 if vivo is not None:
                     mapa_vivo.vivo_agregar(vivo, lo_mapa, off_mapa, mapa_vivo.puntos_profundidad(data, cam_id, depth, f_cam))
+
+            if loc is not None:   # el giroscopio se integra despues de usar el rumbo de este paso
+                localizacion.loc_girar(loc, data.sensordata[imu_adr[0]:imu_adr[0] + 3], control_dt)
 
             if GRABAR:
                 rec["t"].append(data.time)
@@ -661,6 +675,7 @@ def main():
                 if vivo is not None:
                     nuevas = mapa_vivo.obstaculos_nuevos(vivo, L_mapa)
                     print(f"[g1_nav] obstaculos nuevos (no estan en el mapa): {int(nuevas.sum())} celdas")
+                    print(f"[g1_nav] localizacion: {localizacion.loc_resumen(loc)}")
                     if nuevas.any():
                         wp_nuevos, msg_rp = mapa_vivo.replanificar(L_mapa, lo_mapa, off_mapa, nuevas, base_pos[:2], waypoints, nav_state["current_idx"], destino)
                         if wp_nuevos is not None:
@@ -684,8 +699,8 @@ def main():
         from mapa_ocupacion import dibujar
         nuevas = mapa_vivo.obstaculos_nuevos(vivo, L_mapa)
         png = os.path.join(PROJECT_ROOT, "mapas", f"vivo_{time.strftime('%Y%m%d_%H%M%S')}.png")
-        dibujar(L_mapa, lo_mapa, np.array(rec["torso_pos"])[:, :2] - off_mapa if rec["torso_pos"] else np.zeros((2, 2)),
-                np.array(waypoints) - off_mapa, png, nuevas=nuevas)
+        dibujar(L_mapa, lo_mapa, np.array(loc["est"]), np.array(waypoints) - off_mapa, png,
+                trayecto_ref=np.array(loc["real"]), nuevas=nuevas)   # celeste = estimado, verde = real
         print(f"[g1_nav] mapa en vivo guardado: {png} ({int(nuevas.sum())} celdas nuevas en magenta)")
 
     if GRABAR:
