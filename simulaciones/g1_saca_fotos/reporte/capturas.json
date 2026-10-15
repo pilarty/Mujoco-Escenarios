@@ -1838,5 +1838,445 @@
     "x": 2.465849472003221,
     "y": -1.0940409494387815,
     "image": "images/inspeccion_010_step_013239.png"
+  },
+  {
+    "id": "inspeccion_000",
+    "frame": 2634,
+    "timestamp": 1792092374.8053238,
+    "x": -3.2156687869358196,
+    "y": 1.146454108902683,
+    "image": "images/inspeccion_000_step_002634.png"
+  },
+  {
+    "id": "inspeccion_001",
+    "frame": 4450,
+    "timestamp": 1792092422.1080894,
+    "x": 2.3683688587469485,
+    "y": -0.7379675553562374,
+    "image": "images/inspeccion_001_step_004450.png"
+  },
+  {
+    "id": "inspeccion_002",
+    "frame": 5827,
+    "timestamp": 1792092459.2995903,
+    "x": -0.8884949240228458,
+    "y": -2.586069179301244,
+    "image": "images/inspeccion_002_step_005827.png"
+  },
+  {
+    "id": "inspeccion_003",
+    "frame": 6222,
+    "timestamp": 1792092470.4605885,
+    "x": -2.2695886912068883,
+    "y": -2.261743124614847,
+    "image": "images/inspeccion_003_step_006222.png"
+  },
+  {
+    "id": "inspeccion_004",
+    "frame": 7058,
+    "timestamp": 1792092495.226917,
+    "x": 0.82176935931342,
+    "y": 0.11231306039534207,
+    "image": "images/inspeccion_004_step_007058.png"
+  },
+  {
+    "id": "inspeccion_005",
+    "frame": 7980,
+    "timestamp": 1792092519.164763,
+    "x": 2.823347885036095,
+    "y": 1.4035008437780623,
+    "image": "images/inspeccion_005_step_007980.png"
+  },
+  {
+    "id": "inspeccion_006",
+    "frame": 8504,
+    "timestamp": 1792092532.6651118,
+    "x": 2.2830941126585844,
+    "y": -1.1831430317145368,
+    "image": "images/inspeccion_006_step_008504.png"
+  },
+  {
+    "id": "inspeccion_007",
+    "frame": 10492,
+    "timestamp": 1792092583.6720572,
+    "x": -3.9097095313349626,
+    "y": 0.6499745260924779,
+    "image": "images/inspeccion_007_step_010492.png"
+  },
+  {
+    "id": "inspeccion_008",
+    "frame": 10851,
+    "timestamp": 1792092593.1215808,
+    "x": -2.7601424441345412,
+    "y": -1.1106093686773557,
+    "image": "images/inspeccion_008_step_010851.png"
+  },
+  {
+    "id": "inspeccion_009",
+    "frame": 11341,
+    "timestamp": 1792092605.8588452,
+    "x": -2.4424381352289135,
+    "y": -0.1536043844918819,
+    "image": "images/inspeccion_009_step_011341.png"
+  },
+  {
+    "id": "inspeccion_000",
+    "frame": 6222,
+    "timestamp": 1792096201.0801141,
+    "x": -3.7810238416136723,
+    "y": -0.3071703073312656,
+    "image": "images/inspeccion_000_step_006222.png"
+  },
+  {
+    "id": "inspeccion_000",
+    "frame": 6526,
+    "timestamp": 1792101651.002143,
+    "x": 4.033858858141904,
+    "y": 6.238396632510191,
+    "image": "images/inspeccion_000_step_006526.png"
+  },
+  {
+    "id": "inspeccion_001",
+    "frame": 9026,
+    "timestamp": 1792101747.194246,
+    "x": -5.221946126834038,
+    "y": 4.684497616425285,
+    "image": "images/inspeccion_001_step_009026.png"
+  },
+  {
+    "id": "inspeccion_002",
+    "frame": 9850,
+    "timestamp": 1792101784.5564659,
+    "x": -3.779438763984652,
+    "y": -0.2714755411606133,
+    "image": "images/inspeccion_002_step_009850.png"
+  },
+  {
+    "id": "inspeccion_003",
+    "frame": 10195,
+    "timestamp": 1792101804.4135265,
+    "x": -5.245337608876677,
+    "y": -0.8475773468186952,
+    "image": "images/inspeccion_003_step_010195.png"
+  },
+  {
+    "id": "inspeccion_004",
+    "frame": 11152,
+    "timestamp": 1792101844.3568785,
+    "x": -0.5456196525412651,
+    "y": 3.531110398974913,
+    "image": "images/inspeccion_004_step_011152.png"
+  },
+  {
+    "id": "inspeccion_005",
+    "frame": 12323,
+    "timestamp": 1792101890.9768515,
+    "x": 5.299030608029123,
+    "y": 1.2905115217817178,
+    "image": "images/inspeccion_005_step_012323.png"
+  },
+  {
+    "id": "inspeccion_006",
+    "frame": 13357,
+    "timestamp": 1792101932.746286,
+    "x": 5.341296587095407,
+    "y": 5.684154129302836,
+    "image": "images/inspeccion_006_step_013357.png"
+  },
+  {
+    "id": "inspeccion_007",
+    "frame": 14920,
+    "timestamp": 1792101992.1950824,
+    "x": 0.4948061319032964,
+    "y": -0.4829953178634803,
+    "image": "images/inspeccion_007_step_014920.png"
+  },
+  {
+    "id": "inspeccion_008",
+    "frame": 15874,
+    "timestamp": 1792102030.4875777,
+    "x": 0.5083299480870965,
+    "y": 5.654690445405627,
+    "image": "images/inspeccion_008_step_015874.png"
+  },
+  {
+    "id": "inspeccion_009",
+    "frame": 16798,
+    "timestamp": 1792102069.016875,
+    "x": -4.683896596625072,
+    "y": 4.7781134845630495,
+    "image": "images/inspeccion_009_step_016798.png"
+  },
+  {
+    "id": "inspeccion_010",
+    "frame": 17202,
+    "timestamp": 1792102088.410943,
+    "x": -3.3211444090277227,
+    "y": 6.276572204302357,
+    "image": "images/inspeccion_010_step_017202.png"
+  },
+  {
+    "id": "inspeccion_011",
+    "frame": 18045,
+    "timestamp": 1792102122.2250192,
+    "x": 0.8940329498808925,
+    "y": 6.38246805495214,
+    "image": "images/inspeccion_011_step_018045.png"
+  },
+  {
+    "id": "inspeccion_012",
+    "frame": 19301,
+    "timestamp": 1792102301.497959,
+    "x": 3.6212945159076084,
+    "y": 0.7937756304915918,
+    "image": "images/inspeccion_012_step_019301.png"
+  },
+  {
+    "id": "inspeccion_013",
+    "frame": 20334,
+    "timestamp": 1792102339.1511908,
+    "x": 3.7801161104504994,
+    "y": 5.483605646917717,
+    "image": "images/inspeccion_013_step_020334.png"
+  },
+  {
+    "id": "inspeccion_014",
+    "frame": 20825,
+    "timestamp": 1792102359.2186642,
+    "x": 5.6325589688016855,
+    "y": 6.704372006120286,
+    "image": "images/inspeccion_014_step_020825.png"
+  },
+  {
+    "id": "inspeccion_015",
+    "frame": 22036,
+    "timestamp": 1792102405.0334218,
+    "x": 6.686662260306807,
+    "y": -0.24131503446094593,
+    "image": "images/inspeccion_015_step_022036.png"
+  },
+  {
+    "id": "inspeccion_016",
+    "frame": 23666,
+    "timestamp": 1792102462.853222,
+    "x": -3.4989443469763577,
+    "y": 0.4450078829030141,
+    "image": "images/inspeccion_016_step_023666.png"
+  },
+  {
+    "id": "inspeccion_017",
+    "frame": 24398,
+    "timestamp": 1792102488.1467283,
+    "x": 0.06867047755550991,
+    "y": 0.7512085624431448,
+    "image": "images/inspeccion_017_step_024398.png"
+  },
+  {
+    "id": "inspeccion_018",
+    "frame": 27112,
+    "timestamp": 1792102576.2231824,
+    "x": -5.4341009773876365,
+    "y": 6.9510476031994894,
+    "image": "images/inspeccion_018_step_027112.png"
+  },
+  {
+    "id": "inspeccion_019",
+    "frame": 29653,
+    "timestamp": 1792102664.7775807,
+    "x": 4.043301224236659,
+    "y": -1.745145795781039,
+    "image": "images/inspeccion_019_step_029653.png"
+  },
+  {
+    "id": "inspeccion_020",
+    "frame": 31152,
+    "timestamp": 1792102714.1382985,
+    "x": -5.575746374074465,
+    "y": -0.8048767876864095,
+    "image": "images/inspeccion_020_step_031152.png"
+  },
+  {
+    "id": "inspeccion_021",
+    "frame": 32350,
+    "timestamp": 1792102755.843432,
+    "x": -5.420342178613679,
+    "y": 4.753721678838879,
+    "image": "images/inspeccion_021_step_032350.png"
+  },
+  {
+    "id": "inspeccion_000",
+    "frame": 6284,
+    "timestamp": 1792103985.951614,
+    "x": 4.575697045548273,
+    "y": 6.412193011167467,
+    "image": "images/inspeccion_000_step_006284.png"
+  },
+  {
+    "id": "inspeccion_000",
+    "frame": 6284,
+    "timestamp": 1792106487.146031,
+    "x": 4.575697045548273,
+    "y": 6.412193011167467,
+    "image": "images/inspeccion_000_step_006284.png"
+  },
+  {
+    "id": "inspeccion_001",
+    "frame": 8170,
+    "timestamp": 1792106559.4571126,
+    "x": -3.5247950068884277,
+    "y": -0.5297621347860674,
+    "image": "images/inspeccion_001_step_008170.png"
+  },
+  {
+    "id": "inspeccion_002",
+    "frame": 9101,
+    "timestamp": 1792106599.3926525,
+    "x": -5.397380486128347,
+    "y": 4.561056270780073,
+    "image": "images/inspeccion_002_step_009101.png"
+  },
+  {
+    "id": "inspeccion_003",
+    "frame": 10285,
+    "timestamp": 1792106647.2982178,
+    "x": -0.4099924570821155,
+    "y": 3.6229702650412245,
+    "image": "images/inspeccion_003_step_010285.png"
+  },
+  {
+    "id": "inspeccion_004",
+    "frame": 11436,
+    "timestamp": 1792106694.0934563,
+    "x": 5.264649974210097,
+    "y": -1.6838797156027434,
+    "image": "images/inspeccion_004_step_011436.png"
+  },
+  {
+    "id": "inspeccion_005",
+    "frame": 12876,
+    "timestamp": 1792106751.570413,
+    "x": -5.182191630294802,
+    "y": -0.7058290040940647,
+    "image": "images/inspeccion_005_step_012876.png"
+  },
+  {
+    "id": "inspeccion_006",
+    "frame": 14387,
+    "timestamp": 1792106810.472473,
+    "x": 0.057885563882239637,
+    "y": -0.382193410502918,
+    "image": "images/inspeccion_006_step_014387.png"
+  },
+  {
+    "id": "inspeccion_007",
+    "frame": 15278,
+    "timestamp": 1792106848.028577,
+    "x": 0.4963008790780152,
+    "y": 5.638965690750671,
+    "image": "images/inspeccion_007_step_015278.png"
+  },
+  {
+    "id": "inspeccion_008",
+    "frame": 16791,
+    "timestamp": 1792106906.4815621,
+    "x": -5.925884127523621,
+    "y": 6.490838706674792,
+    "image": "images/inspeccion_008_step_016791.png"
+  },
+  {
+    "id": "inspeccion_009",
+    "frame": 17581,
+    "timestamp": 1792106938.449144,
+    "x": -4.979198762223516,
+    "y": 4.6256765273174,
+    "image": "images/inspeccion_009_step_017581.png"
+  },
+  {
+    "id": "inspeccion_010",
+    "frame": 20197,
+    "timestamp": 1792107030.0519922,
+    "x": 5.367033447094511,
+    "y": 5.68682113029287,
+    "image": "images/inspeccion_010_step_020197.png"
+  },
+  {
+    "id": "inspeccion_011",
+    "frame": 20514,
+    "timestamp": 1792107045.8505545,
+    "x": 4.7427191852925175,
+    "y": 5.6271732640261805,
+    "image": "images/inspeccion_011_step_020514.png"
+  },
+  {
+    "id": "inspeccion_012",
+    "frame": 21666,
+    "timestamp": 1792107088.524752,
+    "x": 3.1152918880435267,
+    "y": -0.2676546871836788,
+    "image": "images/inspeccion_012_step_021666.png"
+  },
+  {
+    "id": "inspeccion_013",
+    "frame": 22671,
+    "timestamp": 1792107128.6904018,
+    "x": -3.4789459090534325,
+    "y": 0.4376325345551409,
+    "image": "images/inspeccion_013_step_022671.png"
+  },
+  {
+    "id": "inspeccion_014",
+    "frame": 23800,
+    "timestamp": 1792107173.2943509,
+    "x": 3.599020228078058,
+    "y": 0.7132300964627522,
+    "image": "images/inspeccion_014_step_023800.png"
+  },
+  {
+    "id": "inspeccion_015",
+    "frame": 24490,
+    "timestamp": 1792107200.0823572,
+    "x": 0.46468306031873374,
+    "y": 0.32648717298970514,
+    "image": "images/inspeccion_015_step_024490.png"
+  },
+  {
+    "id": "inspeccion_016",
+    "frame": 25181,
+    "timestamp": 1792107226.351403,
+    "x": -0.3206311470922016,
+    "y": 6.221492921584668,
+    "image": "images/inspeccion_016_step_025181.png"
+  },
+  {
+    "id": "inspeccion_017",
+    "frame": 26685,
+    "timestamp": 1792107281.3123212,
+    "x": -4.717943312649523,
+    "y": 6.194027649900362,
+    "image": "images/inspeccion_017_step_026685.png"
+  },
+  {
+    "id": "inspeccion_018",
+    "frame": 31706,
+    "timestamp": 1792107459.2566247,
+    "x": 3.980711998353361,
+    "y": 5.489843323396117,
+    "image": "images/inspeccion_018_step_031706.png"
+  },
+  {
+    "id": "inspeccion_019",
+    "frame": 33222,
+    "timestamp": 1792107513.1922784,
+    "x": -0.1913828652277137,
+    "y": -1.2601387255217642,
+    "image": "images/inspeccion_019_step_033222.png"
+  },
+  {
+    "id": "inspeccion_020",
+    "frame": 34180,
+    "timestamp": 1792107549.2470999,
+    "x": 5.61094195257507,
+    "y": 1.1717589239383595,
+    "image": "images/inspeccion_020_step_034180.png"
   }
 ]

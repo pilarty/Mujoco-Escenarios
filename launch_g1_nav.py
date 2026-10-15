@@ -42,7 +42,7 @@ BACKEND_ROOM_URL = "http://127.0.0.1:8000/room"
 BACKEND_MISSION_URL = "http://127.0.0.1:8000/mission"
 BACKEND_MISSION_STATUS_URL = "http://127.0.0.1:8000/mission/status"
 # Escenario a cargar
-SCENARIO = "oficina_s"
+SCENARIO = "edificio_informe"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
 POLICY_ONNX_PATH = "g1_navigation_integration/policy/policy.onnx"
 NAV_CONFIG_PATH = "g1_nav_config.yaml"
@@ -166,7 +166,9 @@ def reportar_estado_mision(base_pos, yaw, nav_state, distance, waypoints_total, 
     try:
         requests.post(BACKEND_MISSION_STATUS_URL, json=payload, timeout=3)
     except requests.exceptions.RequestException as e:
-        print(f"[g1_nav] No se pudo reportar el estado de la misión al backend ({e}).")
+        if not getattr(reportar_estado_mision, "avisado", False):
+            reportar_estado_mision.avisado = True
+            print(f"[g1_nav] No se pudo reportar el estado de la misión al backend ({e}). No aviso de nuevo.")
 
 
 def enviar_a_backend(registro, img_pil):
@@ -587,6 +589,8 @@ def main():
     t_iter = time.perf_counter()
     t_next = time.perf_counter()
     t_log, sim_log = time.perf_counter(), 0.0
+    n_log = 0        # cuantos segundos de log pasaron
+    pct_ult = -1     # ultimo porcentaje de inspeccion impreso
     worst = {"iter": 0.0, "sync": 0.0}
     log_every = max(1, round(1.0 / control_dt))
     fallen_warned = False
@@ -662,7 +666,7 @@ def main():
                     _, depth_foto = rgbd_capture(data, rgbd_r)   # imagen de profundidad del mismo instante que la foto
                     cobertura.cob_foto_desde(cob, sl, data, cam_id, lid["body_id"], depth_foto, f_cam)
                     inspeccion.inspeccion_foto_hecha(ins, cob)
-                    print(f"[g1_nav] inspeccion: foto {ins['n']} en ({base_pos[0]:.2f}, {base_pos[1]:.2f}), rumbo {np.degrees(yaw):.0f} grados; {cobertura.cob_texto(cob)}")
+                    print(f"[g1_nav] inspeccion: foto {ins['n']} en ({base_pos[0]:.2f}, {base_pos[1]:.2f}), rumbo {np.degrees(yaw):.0f} grados, cobertura {cobertura.cob_resumen(cob)[0]:.0f}%")
                 else:
                     print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
                     reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
@@ -715,28 +719,14 @@ def main():
 
             step_count += 1
             if step_count % log_every == 0:
-                wp_idx = min(nav_state["current_idx"], len(waypoints) - 1)
-                print(
-                    f"[g1_nav] pos=({base_pos[0]:.2f},{base_pos[1]:.2f}) yaw={yaw:.2f} "
-                    f"goal={waypoints[wp_idx]} dist={distance:.2f} "
-                    f"cmd=({nav_cmd[0]:.2f},{nav_cmd[1]:.2f},{nav_cmd[2]:.2f}) "
-                    f"waiting={nav_state['waiting_at_waypoint']}"
-                )
-                print(f"[g1_nav] peor iteracion={1000*worst['iter']:.0f} ms, peor sync={1000*worst['sync']:.0f} ms")
+                n_log += 1
                 worst["iter"] = worst["sync"] = 0.0
-                _w = time.perf_counter()
-                print(f"[g1_nav] velocidad real = {(data.time - sim_log) / (_w - t_log):.2f}x")
-                t_log, sim_log = _w, data.time
-                hits = np.isfinite(ranges)
-                if hits.any():
-                    print(f"[g1_nav] lidar: {hits.sum()}/{ranges.size} impactos, min={ranges[hits].min():.2f} m")
-                ok = np.isfinite(depth)
-                if ok.any():
-                    print(f"[g1_nav] rgbd: {ok.mean() * 100:.0f}% pixeles validos, profundidad min={depth[ok].min():.2f} m, mediana={np.median(depth[ok]):.2f} m")
+                if n_log % 30 == 0:   # velocidad real, una vez cada 30 s
+                    _w = time.perf_counter()
+                    print(f"[g1_nav] velocidad real = {(data.time - sim_log) / (_w - t_log):.2f}x")
+                    t_log, sim_log = _w, data.time
                 if vivo is not None:
                     nuevas = mapa_vivo.obstaculos_nuevos(vivo, L_mapa)
-                    print(f"[g1_nav] obstaculos nuevos (no estan en el mapa): {int(nuevas.sum())} celdas")
-                    print(f"[g1_nav] localizacion: {localizacion.loc_resumen(loc)}")
                     if nuevas.any():
                         wp_nuevos, msg_rp = mapa_vivo.replanificar(L_mapa, lo_mapa, off_mapa, nuevas, base_pos[:2], waypoints, nav_state["current_idx"], destino)
                         if wp_nuevos is not None:
@@ -745,13 +735,13 @@ def main():
                             print(f"[g1_nav] ruta bloqueada por obstaculo nuevo: replanificada, {len(waypoints)} waypoints {msg_rp}")
                         elif msg_rp:
                             print(f"[g1_nav] ruta bloqueada por obstaculo nuevo y no hay otra: {msg_rp}")
-                if sl is not None and sl["err"]:
+                if sl is not None and sl["err"] and n_log % 10 == 0:   # error del SLAM, una vez cada 10 s
                     print(f"[g1_nav] slam: {slam_vivo.slam_resumen(sl)}")
                 if explorando and sl["n"] > 10:
                     explorar_fin = ex["terminada"] or data.time > cfg_nav.get("explorar_max_s", 900)
                     if not explorar_fin:
                         wp_ex, msg_ex = exploracion.explorar_paso(sl, base_pos[:2], ex, waypoints, nav_state["current_idx"], nav_state["waiting_at_waypoint"])
-                        if msg_ex:
+                        if msg_ex and "corregida" not in msg_ex:
                             print(f"[g1_nav] exploracion: {msg_ex}")
                         if wp_ex is not None:
                             waypoints[:] = wp_ex.tolist()
@@ -769,8 +759,11 @@ def main():
                     else:
                         print(f"[g1_nav] fin a los {data.time:.0f} s de simulacion")
                         break
-                if cob is not None:
-                    print(f"[g1_nav] cobertura: {cobertura.cob_texto(cob)}")
+                if cob is not None and ((not explorando) or ex["terminada"]):   # el porcentaje solo tiene sentido en la fase de inspeccion
+                    pct, cub, sin, vac = cobertura.cob_resumen(cob)
+                    if int(pct) != pct_ult:
+                        pct_ult = int(pct)
+                        print(f"[g1_nav] INSPECCION {pct:.0f}% ({cub} de {cub + sin} tramos de pared vistos) a los {data.time:.0f} s")
                 reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
             worst["iter"] = max(worst["iter"], time.perf_counter() - t_iter)
