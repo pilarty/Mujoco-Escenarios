@@ -690,6 +690,8 @@ def main():
                 rgb, depth = rgbd_capture(data, rgbd_r)
                 if vivo is not None:
                     mapa_vivo.vivo_agregar(vivo, lo_mapa, off_mapa, mapa_vivo.puntos_profundidad(data, cam_id, depth, f_cam))
+                if sl is not None and sl["n"] > 0:
+                    slam_vivo.slam_bajos(sl, data, cam_id, lid["body_id"], depth, f_cam)
                 if cob is not None and sl["n"] > 0 and not inspeccionando:   # en inspeccion solo cuentan las fotos sacadas orientado y quieto
                     cobertura.cob_foto_desde(cob, sl, data, cam_id, lid["body_id"], depth, f_cam)
 
@@ -788,6 +790,7 @@ def main():
             L_f, lo_f = slam_vivo.slam_recortar(sl)
             cobertura.cob_dibujar(cob, L_f, lo_f, np.array(sl["est"]), base_slam + "_cobertura.png")
             print(f"[g1_nav] cobertura final: {cobertura.cob_texto(cob)}; imagen: {base_slam}_cobertura.png")
+            print(f"[g1_nav] cobertura por zona: {cobertura.cob_texto_zonas(cob, L_f, lo_f)}")
             print("[g1_nav] cobertura por altura: " + ", ".join(f"{a:.1f}-{b:.1f} m: {p:.0f}%" for a, b, p in cobertura.cob_por_altura(cob)))
             if inspeccionando:
                 print(f"[g1_nav] inspeccion: {inspeccion.inspeccion_texto(ins, cob)}")

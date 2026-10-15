@@ -8,13 +8,15 @@ import cv2
 import numpy as np
 
 import planificador
-from mapa_ocupacion import RES
+from mapa_ocupacion import RES, UMBRAL_OCC
 from planificador import a_celda, a_metros, celda_mas_cercana, linea_libre, zona_transitable
 from slam_vivo import slam_recortar
 
 MIN_FRONTERA = 8        # celdas (40 cm): una frontera mas chica es un hueco entre rayos o un borde sucio, no un pasillo
 RADIO_META = 1.0        # m: la meta es la celda transitable alcanzable mas cercana a la frontera, a menos de esto
 REPETIDA = 1.0          # m: no se vuelve a elegir una meta a menos de esto de una ya visitada
+SALIDA_MAX = 3.0        # m: una meta no puede estar mas lejos que esto de la pared mapeada (caja que envuelve a las paredes vistas); si no, una puerta o un
+                        # hueco al exterior lleva al robot a espacios sin paredes donde el SLAM se pierde. Cada pared nueva que se descubre agranda la caja.
 HUECO = 7               # celdas (35 cm): huecos de "no visto" mas chicos que esto, entre rayos del LiDAR, no cuentan como zona desconocida
 PASOS = [(1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0), (1, 1, 1.4142), (1, -1, 1.4142), (-1, 1, 1.4142), (-1, -1, 1.4142)]
 
@@ -53,7 +55,7 @@ def costos_desde(trans, ini):
 
 def elegir_meta(L, lo, pos, visitadas):
     """La meta (x, y en metros) de la frontera alcanzable mas cercana, o None si no hay ninguna."""
-    trans, _ = zona_transitable(L)
+    trans, _ = zona_transitable(L, casco=True)
     ci = a_celda(pos, lo)
     ci2 = ci if trans[ci[1], ci[0]] else celda_mas_cercana(trans, ci)
     if ci2 is None:
@@ -64,6 +66,11 @@ def elegir_meta(L, lo, pos, visitadas):
     ok = np.ones(len(xs), dtype=bool)
     for v in visitadas:
         ok &= np.hypot(pm[:, 0] - v[0], pm[:, 1] - v[1]) > REPETIDA
+    fo, co = np.nonzero(L > UMBRAL_OCC)   # caja que envuelve a las paredes mapeadas
+    if len(fo):
+        x0, x1 = lo[0] + co.min() * RES - SALIDA_MAX, lo[0] + (co.max() + 1) * RES + SALIDA_MAX
+        y0, y1 = lo[1] + fo.min() * RES - SALIDA_MAX, lo[1] + (fo.max() + 1) * RES + SALIDA_MAX
+        ok &= (pm[:, 0] >= x0) & (pm[:, 0] <= x1) & (pm[:, 1] >= y0) & (pm[:, 1] <= y1)
     k = int(RADIO_META / RES)
     elipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * k + 1, 2 * k + 1))
     mejor, mejor_costo = None, float("inf")
@@ -89,7 +96,7 @@ def meta_sigue_valida(L, lo, meta):
 
 def ruta_libre(L, lo, pos, waypoints, idx):
     """True si lo que falta de la ruta sigue siendo transitable con el mapa actualizado."""
-    trans, _ = zona_transitable(L)
+    trans, _ = zona_transitable(L, casco=True)
     pts = [np.asarray(pos)] + [np.asarray(w) for w in waypoints[idx:]]
     for a, b in zip(pts[:-1], pts[1:]):
         ca, cb = a_celda(a, lo), a_celda(b, lo)
@@ -103,7 +110,7 @@ def ruta_libre(L, lo, pos, waypoints, idx):
 def explorar_paso(slam, pos, ex, waypoints, idx, llegada):
     """Se llama cada segundo. Devuelve (waypoints nuevos o None si sigue igual, mensaje)."""
     t0 = time.perf_counter()
-    L, lo = slam_recortar(slam, margen=40)
+    L, lo = slam_recortar(slam, margen=40, bajos=True)
     if llegada and ex["meta"] is not None:
         ex["visitadas"].append(ex["meta"])
         ex["meta"] = None
@@ -111,7 +118,7 @@ def explorar_paso(slam, pos, ex, waypoints, idx, llegada):
         if meta_sigue_valida(L, lo, ex["meta"]):
             if ruta_libre(L, lo, pos, waypoints, idx):
                 return None, ""
-            wp, _, _ = planificador.planificar(L, lo, pos, ex["meta"])
+            wp, _, _ = planificador.planificar(L, lo, pos, ex["meta"], casco=True)
             if wp is not None and len(wp) > 0:
                 return wp, f"ruta corregida hacia ({ex['meta'][0]:.1f}, {ex['meta'][1]:.1f}) por mapa nuevo"
         ex["meta"] = None   # la frontera ya se aclaro (o no hay ruta): se elige otra
@@ -119,7 +126,7 @@ def explorar_paso(slam, pos, ex, waypoints, idx, llegada):
     if meta is None:
         ex["terminada"] = True
         return None, f"no quedan fronteras alcanzables: exploracion terminada ({len(ex['visitadas'])} metas visitadas)"
-    wp, _, _ = planificador.planificar(L, lo, pos, meta)
+    wp, _, _ = planificador.planificar(L, lo, pos, meta, casco=True)
     if wp is None or len(wp) == 0:
         ex["visitadas"].append(meta)   # no se puede llegar (o ya esta ahi): que no la vuelva a elegir
         return None, f"meta ({meta[0]:.1f}, {meta[1]:.1f}) descartada"

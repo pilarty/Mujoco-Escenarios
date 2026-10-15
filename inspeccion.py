@@ -16,6 +16,7 @@ PASO_POS = 0.3            # m entre posiciones candidatas
 N_YAW = 16                # direcciones candidatas en cada posicion
 DESFASE_CAMARA = 0.12     # m: la camara va adelantada respecto del centro del robot
 MIN_GANANCIA = 12         # tramos-altura nuevos minimos para que valga la pena ir a un punto de vista
+MIN_GANANCIA_FINAL = 4    # cuando ya no queda ningun punto de vista de MIN_GANANCIA: se pasa a recorrer los restos (columnas, objetos chicos) con este minimo
 PESO_DIST = 0.5           # tramos-altura que "cuesta" cada metro caminado
 MAX_INTENTOS = 2          # un tramo que se intento ver 2 veces sin lograrlo se da por no logrado
 ANCHO, ALTO, FOCAL = 320, 240, 120.0   # imagen de profundidad de la camara
@@ -80,13 +81,15 @@ def visibilidad(L, lo, pos, cen, muestras=14):
     return ~tapado
 
 
-def elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z):
-    """El mejor punto de vista (x, y, yaw, ganancia, esperados) o None."""
+def elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z, min_ganancia=None, Lv=None):
+    """El mejor punto de vista (x, y, yaw, ganancia, esperados) o None. L: mapa para planificar (con obstaculos bajos); Lv: mapa de paredes para la visibilidad (sin ellos:
+    la camara ve por arriba de un objeto bajo)."""
+    Lv = L if Lv is None else Lv
     pen = pendientes(cob, ins)
     if pen is None:
         return None
     P, N, pid, cl, ba, cen = pen
-    trans, _ = zona_transitable(L)
+    trans, _ = zona_transitable(L, casco=True)
     ci = a_celda(pos, lo)
     ci2 = ci if trans[ci[1], ci[0]] else celda_mas_cercana(trans, ci)
     if ci2 is None:
@@ -100,7 +103,7 @@ def elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z):
         return None
     cand = lo + (np.stack([cs, fs], axis=1) + 0.5) * RES
     dist_m = costo[fs, cs] * RES
-    vis = visibilidad(L, lo, cand, cen)[:, pid]                   # (m, n)
+    vis = visibilidad(Lv, lo, cand, cen)[:, pid]                   # (m, n)
     mejor, mejor_neto = None, -np.inf
     for k in range(N_YAW):
         yaw = 2 * np.pi * k / N_YAW
@@ -119,7 +122,7 @@ def elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z):
         ganancia = ok.sum(axis=1)
         neto = ganancia - PESO_DIST * dist_m
         i = int(neto.argmax())
-        if ganancia[i] >= MIN_GANANCIA and neto[i] > mejor_neto:
+        if ganancia[i] >= (MIN_GANANCIA if min_ganancia is None else min_ganancia) and neto[i] > mejor_neto:
             mejor_neto = neto[i]
             mejor = (cand[i].copy(), yaw, int(ganancia[i]), [(cl[j], ba[j]) for j in np.nonzero(ok[i])[0]])
     if mejor is None:
@@ -140,18 +143,21 @@ def inspeccion_decidir(slam, cob, ins, pos, cam_z, t):
             return None, "punto de vista abandonado (no llego u orientarse llevo demasiado)"
         return None, ""
     t0 = time.perf_counter()
-    L, lo = slam_recortar(slam, margen=40)
-    cobertura.cob_registrar(cob, L, lo)   # las paredes del mapa actual, todavia sin ver
+    L, lo = slam_recortar(slam, margen=40, bajos=True)   # para planificar: con los obstaculos bajos que ve la camara
+    Lv, _ = slam_recortar(slam, margen=40)                # para las paredes: solo lo que mapeo el LiDAR
+    cobertura.cob_registrar(cob, Lv, lo)   # las paredes del mapa actual, todavia sin ver
     pct = cobertura.cob_resumen(cob)[0]
     if ins["objetivo"] is not None and pct >= ins["objetivo"]:
         ins["terminada"] = True
         return None, f"cobertura objetivo alcanzada ({pct:.0f}% de {ins['objetivo']:.0f}%): barrido terminado"
-    r = elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z)
+    r = elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z, Lv=Lv)
+    if r is None and MIN_GANANCIA_FINAL < MIN_GANANCIA:
+        r = elegir_punto_de_vista(L, lo, cob, ins, pos, cam_z, MIN_GANANCIA_FINAL, Lv)
     if r is None:
         ins["terminada"] = True
         return None, "no queda pared cubrible con un punto de vista nuevo: inspeccion terminada"
     xy, yaw, ganancia, esperados = r
-    wp, _, _ = planificador.planificar(L, lo, pos, xy)
+    wp, _, _ = planificador.planificar(L, lo, pos, xy, casco=True)
     if wp is None:
         for e in esperados:
             ins["intentos"][e] = ins["intentos"].get(e, 0) + 1

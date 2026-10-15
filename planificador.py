@@ -10,11 +10,12 @@ import sys
 import cv2
 import numpy as np
 
-from mapa_ocupacion import RES, dibujar
+from mapa_ocupacion import RES, UMBRAL_OCC, dibujar
 
 RADIO_ROBOT = 0.35      # m: distancia minima a paredes y a zonas desconocidas
 DIST_COMODA = 1.0       # m: dentro de esta distancia a una pared el camino "cuesta mas", asi se centra en pasillos
 PESO_PARED = 3.0        # cuanto mas caro es pasar pegado a una pared (0 = ir siempre por el camino mas corto)
+CASCO_MARGEN = 0.0      # m: con casco=True el robot no se aleja de las paredes mapeadas mas que esto (ver dentro_de_paredes)
 TRAMO_MAX = 2.0         # m: largo maximo de cada tramo recto entre waypoints
 
 
@@ -33,11 +34,33 @@ def a_metros(c, lo):
     return np.array([lo[0] + (c[0] + 0.5) * RES, lo[1] + (c[1] + 0.5) * RES])
 
 
-def zona_transitable(L):
-    """Celdas libres que ademas quedan a RADIO_ROBOT o mas de cualquier obstaculo o zona desconocida."""
+def dentro_de_paredes(L):
+    """Celdas que quedan dentro del casco convexo de las paredes mapeadas, mas CASCO_MARGEN. Una puerta o un hueco al exterior
+    deja ver espacio "libre" mas alla de las paredes; sin paredes alrededor el SLAM se pierde, asi que alli el robot no planifica."""
+    n, etiq, est, _ = cv2.connectedComponentsWithStats((L > UMBRAL_OCC).astype(np.uint8), connectivity=8)
+    grande = np.zeros(max(n, 1), dtype=bool)
+    grande[1:] = est[1:, cv2.CC_STAT_AREA] >= 6      # sin puntos sueltos
+    ys, xs = np.nonzero(grande[etiq])
+    if len(xs) < 3:
+        return np.ones(L.shape, dtype=bool)
+    casco = cv2.convexHull(np.stack([xs, ys], axis=1).astype(np.int32))
+    m = np.zeros(L.shape, dtype=np.uint8)
+    cv2.fillConvexPoly(m, casco, 1)
+    k = int(CASCO_MARGEN / RES)
+    if k > 0:
+        m = cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * k + 1, 2 * k + 1)))
+    return m > 0
+
+
+def zona_transitable(L, casco=False):
+    """Celdas libres que ademas quedan a RADIO_ROBOT o mas de cualquier obstaculo o zona desconocida.
+    Con casco=True, ademas dentro de las paredes mapeadas (dentro_de_paredes)."""
     libre = (L < -0.2).astype(np.uint8)
     dist = cv2.distanceTransform(libre, cv2.DIST_L2, 5) * RES   # m hasta lo no libre mas cercano
-    return dist >= RADIO_ROBOT, dist
+    trans = dist >= RADIO_ROBOT
+    if casco:
+        trans &= dentro_de_paredes(L)
+    return trans, dist
 
 
 def celda_mas_cercana(trans, c, max_m=1.0):
@@ -100,9 +123,9 @@ def simplificar(trans, ruta):
     return sal
 
 
-def planificar(L, lo, inicio, destino):
+def planificar(L, lo, inicio, destino, casco=False):
     """Devuelve (waypoints en metros sin el punto de inicio, camino completo en metros, mensaje)."""
-    trans, dist = zona_transitable(L)
+    trans, dist = zona_transitable(L, casco)
     ci, cf = a_celda(inicio, lo), a_celda(destino, lo)
     ci2 = ci if trans[ci[1], ci[0]] else celda_mas_cercana(trans, ci)
     if ci2 is None:

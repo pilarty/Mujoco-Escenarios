@@ -10,6 +10,7 @@ from slam_vivo import slam_recortar
 
 PARCHE = 0.5            # m de pared por parche
 DIST_MIN, DIST_MAX = 0.7, 2.0   # m, profundidad de la camara al parche (2 m ~ 8 mm por pixel en la foto de 640 px)
+BANDAS_BAJO = 4         # un parche con al menos tantas bandas "sin pared a esa altura" es un objeto bajo (mueble, escombro, caja), no estructura: se descarta
 ANGULO_MAX = 60.0       # grados entre la normal de la pared y la direccion hacia la camara (en 3D)
 TOL_PROF = 0.35         # m: la profundidad medida tiene que coincidir con la esperada para dar por vista esa pared
 MARGEN_PX = 8           # el parche tiene que caer al menos a esto del borde de la imagen
@@ -86,6 +87,8 @@ def cob_foto(cob, L, lo, cam_pos, R_cam, depth, f):
         est = cob["estado"].setdefault(k, np.zeros(nb, dtype=np.uint8))
         est[cubierto[i]] = 1
         est[vacio[i] & (est == 0)] = 2
+        if (est == 2).sum() >= BANDAS_BAJO:
+            est[:] = 2
         cob["geom"][k] = (cen[i].copy(), nor[i].copy())
 
 
@@ -127,6 +130,35 @@ def cob_dibujar(cob, L, lo, trayecto, ruta_png, px_por_m=40):
     cv2.imwrite(ruta_png, img[::-1])
 
 
+def cob_por_zona(cob, L, lo, tol=0.35):
+    """Cobertura separada en (perimetro, objetos): los parches pegados al contorno exterior del espacio libre son las paredes del recinto;
+    los demas son objetos sueltos (columnas, muebles, divisiones). Devuelve ((pct, tramos), (pct, tramos)); pct None si no hay parches de ese tipo."""
+    libre = cv2.morphologyEx((L < -0.2).astype(np.uint8), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+    n, etiq, est, _ = cv2.connectedComponentsWithStats(libre, connectivity=8)
+    if n < 2 or not cob["estado"]:
+        return (None, 0), (None, 0)
+    mayor = (etiq == 1 + int(np.argmax(est[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+    cont, _ = cv2.findContours(mayor, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)   # solo el contorno de afuera: los objetos son huecos adentro
+    borde = np.zeros(L.shape, np.uint8)
+    cv2.drawContours(borde, cont, -1, 1, 1)
+    dist = cv2.distanceTransform((borde == 0).astype(np.uint8), cv2.DIST_L2, 5) * RES
+    cuenta = {True: [0, 0], False: [0, 0]}   # perimetro?: [cubiertos, medibles]
+    for k, e in cob["estado"].items():
+        c = np.floor((cob["geom"][k][0] - lo) / RES).astype(int)
+        if not (0 <= c[1] < L.shape[0] and 0 <= c[0] < L.shape[1]):
+            continue
+        z = cuenta[bool(dist[c[1], c[0]] <= tol)]
+        z[0] += int((e == 1).sum())
+        z[1] += int((e != 2).sum())
+    return tuple((100.0 * z[0] / z[1] if z[1] else None, z[1]) for z in (cuenta[True], cuenta[False]))
+
+
+def cob_texto_zonas(cob, L, lo):
+    (pp, np_), (po, no) = cob_por_zona(cob, L, lo)
+    f = lambda p, n: "sin tramos" if p is None else f"{p:.0f}% de {n} tramos-altura"
+    return f"paredes del perimetro {f(pp, np_)}; objetos dentro de la sala {f(po, no)}"
+
+
 def cob_foto_desde(cob, slam, data, cam_id, torso_id, depth, f):
     """cob_foto con la pose estimada del robot (slam): posicion del LiDAR/camara y torso estimado por la rotacion fija torso->camara."""
     L, lo = slam_recortar(slam, margen=5)
@@ -135,16 +167,29 @@ def cob_foto_desde(cob, slam, data, cam_id, torso_id, depth, f):
 
 
 def cob_registrar(cob, L, lo):
-    """Da de alta los parches de pared del mapa actual (todos sin ver) y descarta los que ya no estan en el mapa y nunca se vieron."""
+    """Pone al dia los parches de pared con el mapa actual. Los parches del mapa viejo que ya no existen se descartan (si no, quedan "fantasmas"
+    que nunca se pueden ver); lo ya visto pasa a los parches nuevos que quedan en el mismo lugar y de frente al mismo lado."""
     claves, cen, nor = superficies(L, lo)
-    actuales = set(claves)
-    for k in list(cob["estado"]):
-        if k not in actuales and not (cob["estado"][k] == 1).any():
-            del cob["estado"][k]
-            cob["geom"].pop(k, None)
+    viejas = [k for k in cob["estado"] if k in cob["geom"]]
+    if viejas:
+        vc = np.array([cob["geom"][k][0] for k in viejas])
+        vn = np.array([cob["geom"][k][1] for k in viejas])
+        ve = np.array([cob["estado"][k] for k in viejas])
+    estado, geom = {}, {}
     for i, k in enumerate(claves):
-        cob["estado"].setdefault(k, np.zeros(cob["nb"], dtype=np.uint8))
-        cob["geom"][k] = (cen[i].copy(), nor[i].copy())
+        if k in cob["estado"]:
+            est = cob["estado"][k].copy()
+        else:
+            est = np.zeros(cob["nb"], dtype=np.uint8)
+            if viejas:
+                cerca = (np.hypot(vc[:, 0] - cen[i, 0], vc[:, 1] - cen[i, 1]) <= 0.35) & (vn @ nor[i] >= 0.7)
+                if cerca.any():
+                    e = ve[cerca]
+                    est[(e == 2).any(axis=0)] = 2
+                    est[(e == 1).any(axis=0)] = 1
+        estado[k] = est
+        geom[k] = (cen[i].copy(), nor[i].copy())
+    cob["estado"], cob["geom"] = estado, geom
 
 
 def cob_por_altura(cob):
