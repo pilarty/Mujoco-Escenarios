@@ -16,10 +16,22 @@ arrival_radius: 0.4
 # política sigue en control (marcha en el lugar), no hay hand-off a un
 # controlador rígido.
 pause_duration: 3.0
-destino: [4.0, -3.0]
+# destino: [4.0, -3.0]
 # Obstaculos que NO estan en el mapa (sorpresa): [x, y, medio_ancho_x, medio_ancho_y, medio_alto]
-obstaculos: [[2.8, 0.0, 0.4, 0.4, 0.4]]
+# obstaculos: [[2.8, 0.0, 0.4, 0.4, 0.4]]
+slam: true
 pose_estimada: true
-gyro_sesgo_grados_s: 0.5
+explorar: true
+explorar_max_s: 400
+gyro_sesgo_grados_s: 0.0
 gyro_ruido_rad_s: 0.005
 corregir_rumbo: true
+alto_pared: 2.8
+cobertura: true
+inspeccionar: true
+inspeccion_max_s: 1200
+
+inspeccion_cobertura_objetivo: 80
+inspeccion_dist_max: 2.6
+inspeccion_tol_pos: 0.25
+inspeccion_t_quieto: 0.5

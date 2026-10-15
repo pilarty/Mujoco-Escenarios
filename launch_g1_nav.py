@@ -18,6 +18,10 @@ import base64
 
 import mapa_vivo
 import localizacion
+import slam_vivo
+import exploracion
+import cobertura
+import inspeccion
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -519,6 +523,30 @@ def main():
     usar_estimada = bool(loc is not None and load_yaml(NAV_CONFIG_PATH).get("pose_estimada"))   # True: el control usa la pose estimada, no la real
     if usar_estimada:
         print("[g1_nav] navegando con la pose ESTIMADA (giroscopio + LiDAR + mapa), no con la del simulador")
+    sl = None   # SLAM en vivo: mapa y pose propios, sin mapa previo (el origen es donde arranca el robot)
+    if cfg_nav.get("slam"):
+        if destino:
+            raise SystemExit("[g1_nav] 'slam: true' y 'destino' no van juntos: con slam no hay mapa previo sobre el cual planificar")
+        sl = slam_vivo.slam_crear(LIDAR_OFFSET[:2], cfg_nav.get("gyro_sesgo_grados_s", 0.0), cfg_nav.get("gyro_ruido_rad_s", 0.0),
+                                  bool(cfg_nav.get("corregir_rumbo")))
+        print(f"[g1_nav] SLAM en vivo: mapa propio desde cero; giroscopio con sesgo {cfg_nav.get('gyro_sesgo_grados_s', 0.0)} grados/s, "
+              f"ruido {cfg_nav.get('gyro_ruido_rad_s', 0.0)} rad/s; correccion de rumbo con LiDAR: {'SI' if sl['corregir'] else 'no'}")
+        usar_slam = bool(cfg_nav.get("pose_estimada"))
+    else:
+        usar_slam = False
+    explorando = bool(cfg_nav.get("explorar"))   # el robot decide solo a donde ir: siempre la frontera alcanzable mas cercana
+    ex = exploracion.explorar_crear()
+    inspeccionando = bool(cfg_nav.get("inspeccionar"))   # despues de explorar, va a sacar fotos de todas las paredes
+    ins = inspeccion.inspeccion_crear(cfg_nav)
+    if inspeccionando and not explorando:
+        raise SystemExit("[g1_nav] 'inspeccionar: true' necesita 'explorar: true' (usa el mapa que arma la exploracion)")
+    if explorando:
+        if sl is None:
+            raise SystemExit("[g1_nav] 'explorar: true' necesita 'slam: true'")
+        usar_slam = True   # el mapa esta en el marco del arranque: el control tiene que usar la pose estimada
+        waypoints[:] = [[0.0, 0.0]]
+        print(f"[g1_nav] exploracion autonoma: tiempo maximo {cfg_nav.get('explorar_max_s', 900)} s")
+    cob = cobertura.cob_crear(cfg_nav.get("alto_pared", 2.8)) if (sl is not None and cfg_nav.get("cobertura", True)) else None   # lo que la camara efectivamente inspecciono
     guardar_calibracion(model, lid, os.path.join(PROJECT_ROOT, "sensores.json"))
     rec = {"t": [], "torso_pos": [], "torso_mat": [], "imu": [], "lidar_idx": [], "lidar": [],
            "rgbd_idx": [], "rgb": [], "depth": []}
@@ -548,7 +576,7 @@ def main():
         "waiting_at_waypoint": False,
         "arrived_time": 0.0,
         "smoothed_cmd": np.zeros(3),
-        "solo_pausa_final": bool(destino),   # ruta planificada: pausa y foto solo en el ultimo waypoint
+        "solo_pausa_final": bool(destino) or explorando,   # ruta planificada: pausa y foto solo en el ultimo waypoint
     }
     phase_state = {"global_phase": 0.0}
     last_action = np.zeros(29, dtype=np.float64)
@@ -570,6 +598,8 @@ def main():
             quat_nav = quat   # la politica sigue recibiendo la orientacion real (IMU); solo la navegacion usa la estimada
             if usar_estimada:
                 base_pos, quat_nav = localizacion.loc_pose_base(loc, off_mapa, LIDAR_OFFSET)
+            elif usar_slam:
+                base_pos, quat_nav = localizacion.loc_pose_base(sl, np.zeros(2), LIDAR_OFFSET)
             joint_pos = data.qpos[addr["qpos_adr"]]
             joint_vel = data.qvel[addr["dof_adr"]]
 
@@ -577,6 +607,12 @@ def main():
                 base_pos, quat_nav, waypoints, nav_state, nav_params, vel_ranges,
                 arrival_radius, pause_duration, data.time,
             )
+            if inspeccionando and ins["vp"] is not None and nav_state["waiting_at_waypoint"]:   # llego al punto de vista: gira en el lugar hacia la pared
+                err_yaw = inspeccion.inspeccion_orientar(ins, base_pos[:2], yaw, data.time)
+                nav_cmd = nav_cmd.copy()
+                nav_cmd[:2] = inspeccion.inspeccion_acercar(ins, base_pos[:2], yaw, nav_params["kp_lin"])   # ultimos centimetros hasta el punto exacto
+                nav_cmd[2] = clamp(nav_params["kp_ang"] * err_yaw, *vel_ranges["ang_vel_z"])
+                nav_state["smoothed_cmd"][:] = nav_cmd
             gait_phase_obs = navigation_gait_phase(gait_period, control_dt, phase_state, nav_cmd)
 
             obs = build_observation(
@@ -597,18 +633,23 @@ def main():
 
             # Capturar foto al llegar a cada waypoint (solo una vez por waypoint)
             wp_idx = nav_state["current_idx"]
-            if nav_state["waiting_at_waypoint"] and wp_idx not in captured_at_waypoints:
-                captured_at_waypoints.add(wp_idx)
-                
+            foto_inspeccion = inspeccionando and ins["listo"] and ins["vp"] is not None
+            if (nav_state["waiting_at_waypoint"] and wp_idx not in captured_at_waypoints and not explorando) or foto_inspeccion:
+                if foto_inspeccion:
+                    etiqueta = f"inspeccion_{ins['n']:03d}"
+                else:
+                    captured_at_waypoints.add(wp_idx)
+                    etiqueta = f"waypoint_{wp_idx:02d}"
+
                 renderer.update_scene(data, camera="head_camera")
                 imagen = renderer.render()
                 img = Image.fromarray(imagen)
                 
-                nombre_imagen = f"waypoint_{wp_idx:02d}_step_{step_count:06d}.png"
+                nombre_imagen = f"{etiqueta}_step_{step_count:06d}.png"
                 img.save(os.path.join(REPORTE_IMAGENES_DIR, nombre_imagen))
                 
                 registro = {
-                    "id": f"waypoint_{wp_idx:02d}",
+                    "id": etiqueta,
                     "frame": step_count,
                     "timestamp": time.time(),
                     "x": float(base_pos[0]),
@@ -617,8 +658,14 @@ def main():
                 }
                 guardar_captura(registro)
                 threading.Thread(target=enviar_a_backend, args=(registro, img), daemon=True).start()
-                print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
-                reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
+                if foto_inspeccion:
+                    _, depth_foto = rgbd_capture(data, rgbd_r)   # imagen de profundidad del mismo instante que la foto
+                    cobertura.cob_foto_desde(cob, sl, data, cam_id, lid["body_id"], depth_foto, f_cam)
+                    inspeccion.inspeccion_foto_hecha(ins, cob)
+                    print(f"[g1_nav] inspeccion: foto {ins['n']} en ({base_pos[0]:.2f}, {base_pos[1]:.2f}), rumbo {np.degrees(yaw):.0f} grados; {cobertura.cob_texto(cob)}")
+                else:
+                    print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
+                    reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
             projected_gravity = get_projected_gravity(quat)
             if projected_gravity[2] > -0.3 and not fallen_warned:
@@ -635,14 +682,21 @@ def main():
                 if loc is not None:
                     localizacion.loc_barrido(loc, lid["dirs"], ranges, LIDAR_RANGE[1], lidar_origin[:2] - off_mapa,
                                              data.xmat[lid["body_id"]].reshape(3, 3))
+                if sl is not None:
+                    slam_vivo.slam_barrido(sl, lid["dirs"], ranges, LIDAR_RANGE[1], lidar_origin,
+                                           data.xmat[lid["body_id"]].reshape(3, 3), data.xpos[lid["body_id"]][:2])
 
             if step_count % rgbd_every == 0:
                 rgb, depth = rgbd_capture(data, rgbd_r)
                 if vivo is not None:
                     mapa_vivo.vivo_agregar(vivo, lo_mapa, off_mapa, mapa_vivo.puntos_profundidad(data, cam_id, depth, f_cam))
+                if cob is not None and sl["n"] > 0 and not inspeccionando:   # en inspeccion solo cuentan las fotos sacadas orientado y quieto
+                    cobertura.cob_foto_desde(cob, sl, data, cam_id, lid["body_id"], depth, f_cam)
 
             if loc is not None:   # el giroscopio se integra despues de usar el rumbo de este paso
                 localizacion.loc_girar(loc, data.sensordata[imu_adr[0]:imu_adr[0] + 3], control_dt)
+            if sl is not None:
+                localizacion.loc_girar(sl, data.sensordata[imu_adr[0]:imu_adr[0] + 3], control_dt)
 
             if GRABAR:
                 rec["t"].append(data.time)
@@ -689,6 +743,32 @@ def main():
                             print(f"[g1_nav] ruta bloqueada por obstaculo nuevo: replanificada, {len(waypoints)} waypoints {msg_rp}")
                         elif msg_rp:
                             print(f"[g1_nav] ruta bloqueada por obstaculo nuevo y no hay otra: {msg_rp}")
+                if sl is not None and sl["err"]:
+                    print(f"[g1_nav] slam: {slam_vivo.slam_resumen(sl)}")
+                if explorando and sl["n"] > 10:
+                    explorar_fin = ex["terminada"] or data.time > cfg_nav.get("explorar_max_s", 900)
+                    if not explorar_fin:
+                        wp_ex, msg_ex = exploracion.explorar_paso(sl, base_pos[:2], ex, waypoints, nav_state["current_idx"], nav_state["waiting_at_waypoint"])
+                        if msg_ex:
+                            print(f"[g1_nav] exploracion: {msg_ex}")
+                        if wp_ex is not None:
+                            waypoints[:] = wp_ex.tolist()
+                            nav_state["current_idx"] = 0
+                            nav_state["waiting_at_waypoint"] = False
+                    elif inspeccionando and not ins["terminada"] and data.time <= cfg_nav.get("inspeccion_max_s", 1200):
+                        sl["congelado"] = True   # explorar ya dejo un mapa completo: de ahora en mas la posicion se calza contra esa referencia, sin que los errores se acumulen en ella
+                        wp_in, msg_in = inspeccion.inspeccion_decidir(sl, cob, ins, base_pos[:2], data.cam_xpos[cam_id][2], data.time)
+                        if msg_in:
+                            print(f"[g1_nav] inspeccion: {msg_in}")
+                        if wp_in is not None:
+                            waypoints[:] = wp_in.tolist()
+                            nav_state["current_idx"] = 0
+                            nav_state["waiting_at_waypoint"] = False
+                    else:
+                        print(f"[g1_nav] fin a los {data.time:.0f} s de simulacion")
+                        break
+                if cob is not None:
+                    print(f"[g1_nav] cobertura: {cobertura.cob_texto(cob)}")
                 reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
 
             worst["iter"] = max(worst["iter"], time.perf_counter() - t_iter)
@@ -699,6 +779,18 @@ def main():
             else:
                 t_next = time.perf_counter()  # si se atrasa, no intenta recuperar de golpe
             t_iter = time.perf_counter()
+
+    if sl is not None and sl["err"]:
+        base_slam = os.path.join(PROJECT_ROOT, "mapas", f"slam_{time.strftime('%Y%m%d_%H%M%S')}")
+        slam_vivo.slam_guardar(sl, base_slam, SCENARIO, waypoints)
+        print(f"[g1_nav] mapa propio guardado: {base_slam}.png (celeste = estimado, verde = real) y .npz")
+        if cob is not None:
+            L_f, lo_f = slam_vivo.slam_recortar(sl)
+            cobertura.cob_dibujar(cob, L_f, lo_f, np.array(sl["est"]), base_slam + "_cobertura.png")
+            print(f"[g1_nav] cobertura final: {cobertura.cob_texto(cob)}; imagen: {base_slam}_cobertura.png")
+            print("[g1_nav] cobertura por altura: " + ", ".join(f"{a:.1f}-{b:.1f} m: {p:.0f}%" for a, b, p in cobertura.cob_por_altura(cob)))
+            if inspeccionando:
+                print(f"[g1_nav] inspeccion: {inspeccion.inspeccion_texto(ins, cob)}")
 
     if vivo is not None:
         from mapa_ocupacion import dibujar
