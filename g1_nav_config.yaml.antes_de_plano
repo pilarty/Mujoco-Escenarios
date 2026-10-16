@@ -1,0 +1,74 @@
+# Configuración de navegación para launch_g1_nav.py
+# (Todo lo que SÍ es parte del contrato de la red ONNX vive en
+# g1_navigation_integration/policy/deploy.yaml y no se duplica acá.)
+
+# Secuencia de objetivos (x, y) en el mundo, caminados en orden.
+#waypoints: [[0.0, 2.0], [-3.0, 2.0], [-3.0, -2.0], [4.0, -2.0], [4.0, 2.0], [0.0, 2.0], [0.0, 0.0]]
+waypoints: [[0.0, 2.8], [3.0, 2.8], [3.0, -2.5], [3.0, 2.8], [0.0, 2.8], [0.0, -2.8], [-3.0, -2.8], [-3.0, 2.0]]
+# Distancia (m) al waypoint actual por debajo de la cual se considera
+# "llegada" y arranca la pausa. Más laxo que el goal_tolerance interno
+# de deploy.yaml (0.2) porque el control proporcional converge de forma
+# asintótica y puede no cruzar nunca un umbral más estricto.
+arrival_radius: 0.4
+
+# Tiempo (s) de pausa en cada waypoint antes de avanzar al siguiente.
+# Durante la pausa el comando de velocidad se fuerza a (0,0,0) pero la
+# política sigue en control (marcha en el lugar), no hay hand-off a un
+# controlador rígido.
+pause_duration: 3.0
+# destino: [4.0, -3.0]
+# Obstaculos que NO estan en el mapa (sorpresa): [x, y, medio_ancho_x, medio_ancho_y, medio_alto]
+# obstaculos: [[2.8, 0.0, 0.4, 0.4, 0.4]]
+slam: true
+pose_estimada: true
+explorar: true
+explorar_max_s: 400
+gyro_sesgo_grados_s: 0.0
+gyro_ruido_rad_s: 0.005
+corregir_rumbo: true
+alto_pared: 2.8
+cobertura: true
+inspeccionar: true
+inspeccion_max_s: 1200
+
+inspeccion_cobertura_objetivo: 80
+inspeccion_dist_max: 2.6
+inspeccion_tol_pos: 0.25
+inspeccion_t_quieto: 0.5
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# DETECTOR DE DANOS SIMULADO (el modelo del back esta roto: el veredicto "hay dano" lo da el simulador, no el back).
+# Con 'detector_simulado: false' (o borrando estas lineas) todo sigue como antes.
+detector_simulado: true
+detector_prob_max: 0.9     # probabilidad maxima de detectar un dano cuando se ve bien (0 a 1)
+detector_area_ref: 0.04    # que parte de la foto (0 a 1) tiene que ocupar el dano para llegar a esa probabilidad; mas chico = mas dificil detectar de lejos
+detector_falsos: 0.02      # probabilidad de falso positivo por foto cuando no hay ningun dano a la vista
+detector_grilla: [4, 3]    # si una foto da positivo, se la divide en columnas x filas y se pregunta por cada recorte para saber DONDE esta el dano
+detector_semilla: 0        # mismo numero = mismos sorteos en cada corrida (cambialo para probar con otra suerte)
+
+# DANOS REALES: donde estan en el escenario, para que el simulador sepa cuando una foto los ve.
+#   x, y: posicion del CENTRO del dano en el piso del mundo (m), la misma que ves en MuJoCo. Va sobre la superficie de la pared, no en el medio del muro.
+#   z:    altura del centro del dano (m); 0 es el piso y las paredes miden 2.8.
+#   cara: hacia donde mira la cara de la pared que tiene el dano, o sea hacia que lado esta el robot cuando lo ve de frente: "+x", "-x", "+y" o "-y".
+#   ancho: tamano a lo largo de la pared (m); alto: tamano vertical (m).
+# Los 5 de abajo son los danos pintados de edificio_informe (damage_manifest.json), medidos sobre el dano visible, no sobre la caja del manifest.
+danos:
+  - {tipo: grieta_estructural,      x:  3.49, y: -2.90, z: 2.10, cara: "+y", ancho: 0.81, alto: 1.01}   # sala B, pared sur
+  - {tipo: humedad,                 x: -3.11, y:  8.90, z: 1.79, cara: "-y", ancho: 1.77, alto: 1.58}   # sala C, pared norte
+  - {tipo: grieta_estructural,      x: -2.10, y: -2.20, z: 2.07, cara: "-x", ancho: 0.80, alto: 1.05}   # sala A, pared interior (lado oeste)
+  - {tipo: grieta_estructural,      x: -1.90, y:  1.84, z: 2.40, cara: "+x", ancho: 1.08, alto: 0.60}   # vestibulo, pared oeste
+  - {tipo: desprendimiento_revoque, x: -1.90, y:  4.55, z: 1.19, cara: "+x", ancho: 1.06, alto: 1.09}   # vestibulo, pared oeste
+# Todavia no soportados (no son dano en una pared): escombros de techo en (5.05, -0.1), viga caida en (4.9, 0.0), brecha en la pared x=2 en (2.0, 7.8).
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# INSPECCION FINA (paso 2): despues del barrido, el robot visita cada hallazgo, saca varias fotos y las manda al back con la posicion del DANO.
+inspeccion_fina: true
+fina_pasos: [general, cerca, izq, der]   # fotos por hallazgo, en orden (general: entero; cerca: lo mas cerca que deja el campo visual; izq/der: de costado)
+fina_enviar: [general, cerca, izq, der]  # cuales de esas fotos se mandan al back
+fina_angulo_grados: 30                   # angulo de las fotos de costado respecto de la perpendicular a la pared
+fina_cerca_m: 1.0                        # distancia minima de la foto de cerca (m); si el dano es alto, queda mas lejos (la camara no se inclina)
+fina_grilla: [8, 6]                      # con que grilla se afina DONDE esta el dano en la foto general y en la de cerca
+fina_recorte: true                       # recortar la foto alrededor del dano antes de mandarla (el back la achica a 224 x 224)
+fina_clasificar_en_back: false           # false: el back se usa tal cual esta (no se le manda ningun campo nuevo). true: manda 'clasificar_siempre', que solo sirve si el back lo tiene
+fina_max_s: 900                          # segundos de simulacion maximos para toda la inspeccion fina
+barrido_al_back: false                    # false: las fotos del barrido no se mandan al back (solo las de la inspeccion fina)

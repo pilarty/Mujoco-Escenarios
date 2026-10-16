@@ -19,9 +19,12 @@ import base64
 import mapa_vivo
 import localizacion
 import slam_vivo
+import plano
 import exploracion
 import cobertura
 import inspeccion
+import danos
+import fina
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -41,6 +44,7 @@ BACKEND_DETECTIONS_URL = "http://127.0.0.1:8000/detections"
 BACKEND_ROOM_URL = "http://127.0.0.1:8000/room"
 BACKEND_MISSION_URL = "http://127.0.0.1:8000/mission"
 BACKEND_MISSION_STATUS_URL = "http://127.0.0.1:8000/mission/status"
+LAT_BACKEND = []   # (segundos que tardo el back en contestar cada foto, codigo HTTP)
 # Escenario a cargar
 SCENARIO = "edificio_informe"
 DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
@@ -184,9 +188,11 @@ def enviar_a_backend(registro, img_pil):
         "y": registro["y"],
         "imagen_base64": imagen_b64,
     }
+    t0 = time.perf_counter()
     try:
-        requests.post(BACKEND_DETECTIONS_URL, json=payload, timeout=15)
-        print(f"  -> Captura enviada al backend (frame {registro['frame']})")
+        resp = requests.post(BACKEND_DETECTIONS_URL, json=payload, timeout=15)
+        LAT_BACKEND.append((time.perf_counter() - t0, resp.status_code))
+        print(f"  -> Captura enviada al backend (frame {registro['frame']}): respondio en {LAT_BACKEND[-1][0]:.2f} s (HTTP {resp.status_code})")
     except requests.exceptions.RequestException as e:
         print(f"  -> No se pudo enviar al backend ({e}). ¿Está corriendo uvicorn?")
 
@@ -476,11 +482,12 @@ def build_observation(data, addr, quat, joint_pos, joint_vel, default_joint_pos,
 
 def main():
     # Enviar room layout al backend al iniciar
+    room = None   # (si no se puede calcular el layout del escenario, plano.py arma los limites desde el mapa del SLAM)
     try:
         escenario_dir = os.path.join(PROJECT_ROOT, "escenarios", SCENARIO)
         room = calcular_room_layout(escenario_dir)
-        requests.post(BACKEND_ROOM_URL, json=room, timeout=5)
-        print(f"[g1_nav] Room layout enviado: {room['width']:.2f} m x {room['depth']:.2f} m")
+        r_room = requests.post(BACKEND_ROOM_URL, json=room, timeout=5)
+        print(f"[g1_nav] Room layout enviado: {room['width']:.2f} m x {room['depth']:.2f} m (back: HTTP {r_room.status_code})")
     except requests.exceptions.RequestException as e:
         print(f"[g1_nav] No se pudo enviar el room layout al backend ({e}). ¿Está corriendo uvicorn?")
     except Exception as e:
@@ -540,6 +547,10 @@ def main():
     ex = exploracion.explorar_crear()
     inspeccionando = bool(cfg_nav.get("inspeccionar"))   # despues de explorar, va a sacar fotos de todas las paredes
     ins = inspeccion.inspeccion_crear(cfg_nav)
+    dn = danos.danos_crear(cfg_nav)   # detector de danos SIMULADO (el del back esta roto)
+    if dn is not None:
+        print(f"[g1_nav] detector de danos simulado: {len(dn['reales'])} danos reales en el yaml, grilla {dn['grilla'][0]}x{dn['grilla'][1]}, prob. maxima {dn['p_max']}, falsos {dn['falsos']}")
+    fi = fina.fina_crear(cfg_nav, dn, BACKEND_DETECTIONS_URL, REPORTE_IMAGENES_DIR)   # inspeccion fina de cada hallazgo (None si el yaml no tiene 'inspeccion_fina: true')
     if inspeccionando and not explorando:
         raise SystemExit("[g1_nav] 'inspeccionar: true' necesita 'explorar: true' (usa el mapa que arma la exploracion)")
     if explorando:
@@ -548,6 +559,7 @@ def main():
         usar_slam = True   # el mapa esta en el marco del arranque: el control tiene que usar la pose estimada
         waypoints[:] = [[0.0, 0.0]]
         print(f"[g1_nav] exploracion autonoma: tiempo maximo {cfg_nav.get('explorar_max_s', 900)} s")
+    pl = plano.plano_crear(cfg_nav, room, BACKEND_ROOM_URL)   # mapa de paredes y posicion hacia el front (None si el yaml tiene 'plano_al_back: false')
     cob = cobertura.cob_crear(cfg_nav.get("alto_pared", 2.8)) if (sl is not None and cfg_nav.get("cobertura", True)) else None   # lo que la camara efectivamente inspecciono
     guardar_calibracion(model, lid, os.path.join(PROJECT_ROOT, "sensores.json"))
     rec = {"t": [], "torso_pos": [], "torso_mat": [], "imu": [], "lidar_idx": [], "lidar": [],
@@ -640,7 +652,7 @@ def main():
             foto_inspeccion = inspeccionando and ins["listo"] and ins["vp"] is not None
             if (nav_state["waiting_at_waypoint"] and wp_idx not in captured_at_waypoints and not explorando) or foto_inspeccion:
                 if foto_inspeccion:
-                    etiqueta = f"inspeccion_{ins['n']:03d}"
+                    etiqueta = f"fina_h{fi['act']['h']['id']}_{ins['vp']['fino']['paso']}" if ins['vp'].get('fino') else f"inspeccion_{ins['n']:03d}"
                 else:
                     captured_at_waypoints.add(wp_idx)
                     etiqueta = f"waypoint_{wp_idx:02d}"
@@ -661,12 +673,18 @@ def main():
                     "image": f"images/{nombre_imagen}",
                 }
                 guardar_captura(registro)
-                threading.Thread(target=enviar_a_backend, args=(registro, img), daemon=True).start()
+                if not (foto_inspeccion and ins['vp'].get('fino')) and (not foto_inspeccion or cfg_nav.get('barrido_al_back', True)):   # las fotos de la inspeccion fina las manda fina.py, con la posicion del dano
+                    threading.Thread(target=enviar_a_backend, args=(registro, img), daemon=True).start()
                 if foto_inspeccion:
                     _, depth_foto = rgbd_capture(data, rgbd_r)   # imagen de profundidad del mismo instante que la foto
-                    cobertura.cob_foto_desde(cob, sl, data, cam_id, lid["body_id"], depth_foto, f_cam)
-                    inspeccion.inspeccion_foto_hecha(ins, cob)
-                    print(f"[g1_nav] inspeccion: foto {ins['n']} en ({base_pos[0]:.2f}, {base_pos[1]:.2f}), rumbo {np.degrees(yaw):.0f} grados, cobertura {cobertura.cob_resumen(cob)[0]:.0f}%")
+                    fino = fina.fina_foto(fi, ins, sl, data, cam_id, lid["body_id"], depth_foto, f_cam, img, registro, dn)   # None si no es una foto de la inspeccion fina
+                    if fino is not None:
+                        print(f"[g1_nav] {fino}")
+                    if fino is None: cobertura.cob_foto_desde(cob, sl, data, cam_id, lid["body_id"], depth_foto, f_cam)   # las fotos de la inspeccion fina no suman a la cobertura del barrido
+                    if fino is None: inspeccion.inspeccion_foto_hecha(ins, cob)   # (en la inspeccion fina libera el punto de vista fina.fina_foto)
+                    if dn is not None and fino is None:
+                        print(danos.dn_foto(dn, sl, data, cam_id, lid["body_id"], depth_foto, f_cam, ins["n"], data.time))
+                    if fino is None: print(f"[g1_nav] inspeccion: foto {ins['n']} en ({base_pos[0]:.2f}, {base_pos[1]:.2f}), rumbo {np.degrees(yaw):.0f} grados, cobertura {cobertura.cob_resumen(cob)[0]:.0f}%")
                 else:
                     print(f"[g1_nav] Foto capturada en waypoint {wp_idx}: ({base_pos[0]:.2f}, {base_pos[1]:.2f})")
                     reportar_estado_mision(base_pos, yaw, nav_state, distance, len(waypoints), fallen_warned)
@@ -717,6 +735,7 @@ def main():
                     rec["rgb"].append(rgb)
                     rec["depth"].append(depth.astype(np.float16))
 
+            plano.plano_tick(pl, sl, data.time, base_pos, yaw, ex["terminada"])   # posicion cada 0.5 s y paredes cada 'plano_cada_s', en un hilo
             step_count += 1
             if step_count % log_every == 0:
                 n_log += 1
@@ -756,6 +775,15 @@ def main():
                             waypoints[:] = wp_in.tolist()
                             nav_state["current_idx"] = 0
                             nav_state["waiting_at_waypoint"] = False
+                    elif fi is not None and not fi['terminada']:
+                        sl['congelado'] = True
+                        wp_fi, msgs_fi = fina.fina_decidir(fi, dn, sl, ins, base_pos[:2], data.cam_xpos[cam_id][2], f_cam, data.time)
+                        for m_fi in msgs_fi:
+                            print(f"[g1_nav] {m_fi}")
+                        if wp_fi is not None:
+                            waypoints[:] = wp_fi.tolist()
+                            nav_state['current_idx'] = 0
+                            nav_state['waiting_at_waypoint'] = False
                     else:
                         print(f"[g1_nav] fin a los {data.time:.0f} s de simulacion")
                         break
@@ -775,6 +803,8 @@ def main():
                 t_next = time.perf_counter()  # si se atrasa, no intenta recuperar de golpe
             t_iter = time.perf_counter()
 
+    if pl is not None:
+        print(plano.plano_final(pl, sl))   # el mapa final, para que el front lo tenga completo
     if sl is not None and sl["err"]:
         base_slam = os.path.join(PROJECT_ROOT, "mapas", f"slam_{time.strftime('%Y%m%d_%H%M%S')}")
         slam_vivo.slam_guardar(sl, base_slam, SCENARIO, waypoints)
@@ -787,6 +817,13 @@ def main():
             print("[g1_nav] cobertura por altura: " + ", ".join(f"{a:.1f}-{b:.1f} m: {p:.0f}%" for a, b, p in cobertura.cob_por_altura(cob)))
             if inspeccionando:
                 print(f"[g1_nav] inspeccion: {inspeccion.inspeccion_texto(ins, cob)}")
+            if dn is not None:
+                print(danos.dn_cierre(dn, sl, data.cam_xpos[cam_id][2], f_cam, base_slam))
+                if fi is not None:
+                    print(fina.fina_cierre(fi, dn, sl, base_slam))
+            if LAT_BACKEND:
+                seg = [x[0] for x in LAT_BACKEND]
+                print(f"[g1_nav] back: {len(seg)} fotos contestadas, tardo en promedio {sum(seg) / len(seg):.2f} s (maximo {max(seg):.2f} s); con error HTTP: {sum(1 for x in LAT_BACKEND if x[1] != 200)}")
 
     if vivo is not None:
         from mapa_ocupacion import dibujar
