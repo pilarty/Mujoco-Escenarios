@@ -1,0 +1,37 @@
+<mujocoinclude>
+  <!--
+    ESCENARIO DE PRUEBA: OFICINA EN S (10 x 8 m, cerrada)
+    Sirve para probar el mapeo en un entorno distinto de modular_building.
+    Dos paredes internas obligan a un recorrido en S:
+      - pared A (x=-1.5) cubre y de -2 a 4  -> paso libre al sur
+      - pared B (x= 1.5) cubre y de -4 a 2  -> paso libre al norte
+    El robot nace en (0,0), en el canal central.
+  -->
+  <asset>
+    <texture type="2d" name="of_wall_tex" builtin="flat" rgb1="0.7 0.7 0.72" width="200" height="200"/>
+    <texture type="2d" name="of_wood_tex" builtin="flat" rgb1="0.45 0.3 0.2" width="150" height="150"/>
+    <material name="of_wall" texture="of_wall_tex" reflectance="0.05"/>
+    <material name="of_wood" texture="of_wood_tex" reflectance="0.15"/>
+  </asset>
+
+  <worldbody>
+    <light name="of_luz_1" pos="-3 0 2.8" diffuse="0.7 0.7 0.7" castshadow="true"/>
+    <light name="of_luz_2" pos="3 0 2.8" diffuse="0.7 0.7 0.7" castshadow="true"/>
+    <light name="of_luz_relleno" directional="true" pos="0 0 8" dir="0 0 -1" diffuse="0.3 0.3 0.3"/>
+
+    <!-- paredes exteriores -->
+    <geom name="of_norte" type="box" pos="0 4 1.4" size="5.15 0.15 1.4" material="of_wall"/>
+    <geom name="of_sur" type="box" pos="0 -4 1.4" size="5.15 0.15 1.4" material="of_wall"/>
+    <geom name="of_oeste" type="box" pos="-5 0 1.4" size="0.15 4.15 1.4" material="of_wall"/>
+    <geom name="of_este" type="box" pos="5 0 1.4" size="0.15 4.15 1.4" material="of_wall"/>
+
+    <!-- paredes internas (recorrido en S) -->
+    <geom name="of_pared_A" type="box" pos="-1.5 1 1.4" size="0.15 3 1.4" material="of_wall"/>
+    <geom name="of_pared_B" type="box" pos="1.5 -1 1.4" size="0.15 3 1.4" material="of_wall"/>
+
+    <!-- obstaculos -->
+    <geom name="of_columna" type="cylinder" pos="-3.5 -1 1.0" size="0.3 1.0" material="of_wall"/>
+    <geom name="of_caja_este" type="box" pos="4 1.5 0.4" size="0.4 0.4 0.4" material="of_wood"/>
+    <geom name="of_caja_centro" type="box" pos="0.9 -1.2 0.25" size="0.25 0.25 0.25" material="of_wood"/>
+  </worldbody>
+</mujocoinclude>

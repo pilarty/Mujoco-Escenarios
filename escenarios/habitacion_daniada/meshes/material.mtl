@@ -5,6 +5,8 @@ Ni 1.500
 d 1.0
 illum 2
 map_Kd texture_pbr_20250901.png
-map_Pm texture_pbr_20250901_metallic.png
-map_Pr texture_pbr_20250901_roughness.png
-map_Bump -bm 1.0 texture_pbr_20250901_normal.png
+# map_Pm / map_Pr / map_Bump (metallic/roughness/normal) removidos: Fase A
+# confirmo que MuJoCo nunca los carga (el material real se define en
+# escenario.xml via <material>/<texture>, que solo usa map_Kd). Este .mtl
+# no lo lee el pipeline de MuJoCo, se deja solo por prolijidad/compatibilidad
+# con otros visores de .obj.

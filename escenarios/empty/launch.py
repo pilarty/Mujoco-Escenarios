@@ -5,7 +5,7 @@ import os
 # ==============================================================================
 # CONFIGURACIÓN: Seleccionar escenario
 # ==============================================================================
-SCENARIO_FILE = "empty.xml"  
+SCENARIO_FILE = "room.xml"  
 
 # Leer el archivo de escenario
 scenario_path = os.path.join("modelos", SCENARIO_FILE)

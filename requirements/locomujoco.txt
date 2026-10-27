@@ -1,0 +1,3 @@
+# LocoMuJoCo framework
+# Instala el framework oficial desde GitHub. No hace falta clonar el repo manualmente.
+git+https://github.com/robfiras/loco-mujoco.git

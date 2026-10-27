@@ -1,0 +1,328 @@
+<mujocoinclude>
+  <!-- GENERADO por generar_edificio.py, no editar a mano. -->
+  <statistic extent="20" center="0 3 1"/>
+  <visual>
+    <global offwidth="1920" offheight="1080"/>
+    <quality shadowsize="8192"/>
+    <headlight ambient="0.26 0.26 0.28" diffuse="0.12 0.12 0.12" specular="0.05 0.05 0.05"/>
+    <map znear="0.002" zfar="120" shadowscale="0.6"/>
+  </visual>
+  <asset>
+    <texture name="t_revoque" type="2d" file="../../escenarios/edificio_informe/assets/pared_revoque.png"/>
+    <texture name="t_hormigon" type="2d" file="../../escenarios/edificio_informe/assets/pared_hormigon.png"/>
+    <texture name="t_piso_h" type="2d" file="../../escenarios/edificio_informe/assets/piso_hormigon.png"/>
+    <texture name="t_piso_m" type="2d" file="../../escenarios/edificio_informe/assets/piso_madera.png"/>
+    <texture name="t_mueble" type="2d" file="../../escenarios/edificio_informe/assets/mueble_madera.png"/>
+    <texture name="t_escombro" type="2d" file="../../escenarios/edificio_informe/assets/escombro.png"/>
+    <material name="m_revoque" texture="t_revoque" rgba="1 1 1 1" specular="0.05" shininess="0.05"/>
+    <material name="m_hormigon" texture="t_hormigon" rgba="0.95 0.95 0.95 1" specular="0.05" shininess="0.05"/>
+    <material name="m_piso_h" texture="t_piso_h" rgba="1 1 1 1" specular="0.15" shininess="0.2" reflectance="0.05"/>
+    <material name="m_piso_m" texture="t_piso_m" rgba="1 1 1 1" specular="0.2" shininess="0.3" reflectance="0.05"/>
+    <material name="m_suelo" texture="t_piso_h" texuniform="true" texrepeat="0.35 0.35" rgba="0.8 0.8 0.8 1" specular="0.05" shininess="0.05"/>
+    <material name="m_techo" texture="t_revoque" rgba="1 1 1 1" specular="0.02" shininess="0.02" emission="0.35"/>
+    <material name="m_madera" texture="t_mueble" rgba="1 1 1 1" specular="0.2" shininess="0.3"/>
+    <material name="m_marco" rgba="0.20 0.13 0.08 1" specular="0.2" shininess="0.3"/>
+    <material name="m_luz" rgba="1 1 0.92 1" emission="1"/>
+    <material name="m_vidrio" rgba="0.75 0.88 0.95 0.15" specular="0.6" shininess="0.8"/>
+    <material name="m_escombro" texture="t_escombro" rgba="1 1 1 1" specular="0.05" shininess="0.05"/>
+        <mesh name="m_revoque" file="../../escenarios/edificio_informe/meshes/m_revoque.obj"/>
+    <mesh name="m_piso_h" file="../../escenarios/edificio_informe/meshes/m_piso_h.obj"/>
+    <mesh name="m_piso_m" file="../../escenarios/edificio_informe/meshes/m_piso_m.obj"/>
+    <mesh name="m_madera" file="../../escenarios/edificio_informe/meshes/m_madera.obj"/>
+    <mesh name="m_marco" file="../../escenarios/edificio_informe/meshes/m_marco.obj"/>
+    <mesh name="m_vidrio" file="../../escenarios/edificio_informe/meshes/m_vidrio.obj"/>
+    <texture name="t_pieza_ext_sur_3" type="2d" file="../../escenarios/edificio_informe/assets/pieza_ext_sur_3.png"/>
+    <material name="mt_pieza_ext_sur_3" texture="t_pieza_ext_sur_3" rgba="1 1 1 1" specular="0.05" shininess="0.05"/>
+    <mesh name="pieza_ext_sur_3" file="../../escenarios/edificio_informe/meshes/pieza_ext_sur_3.obj"/>
+    <texture name="t_pieza_ext_norte_3" type="2d" file="../../escenarios/edificio_informe/assets/pieza_ext_norte_3.png"/>
+    <material name="mt_pieza_ext_norte_3" texture="t_pieza_ext_norte_3" rgba="1 1 1 1" specular="0.05" shininess="0.05"/>
+    <mesh name="pieza_ext_norte_3" file="../../escenarios/edificio_informe/meshes/pieza_ext_norte_3.obj"/>
+    <texture name="t_pieza_int_x_m2_0" type="2d" file="../../escenarios/edificio_informe/assets/pieza_int_x_m2_0.png"/>
+    <material name="mt_pieza_int_x_m2_0" texture="t_pieza_int_x_m2_0" rgba="1 1 1 1" specular="0.05" shininess="0.05"/>
+    <mesh name="pieza_int_x_m2_0" file="../../escenarios/edificio_informe/meshes/pieza_int_x_m2_0.obj"/>
+    <texture name="t_pieza_int_x_m2_2" type="2d" file="../../escenarios/edificio_informe/assets/pieza_int_x_m2_2.png"/>
+    <material name="mt_pieza_int_x_m2_2" texture="t_pieza_int_x_m2_2" rgba="1 1 1 1" specular="0.05" shininess="0.05"/>
+    <mesh name="pieza_int_x_m2_2" file="../../escenarios/edificio_informe/meshes/pieza_int_x_m2_2.obj"/>
+    <mesh name="roca_0" file="../../escenarios/edificio_informe/meshes/roca_0.obj"/>
+    <mesh name="roca_1" file="../../escenarios/edificio_informe/meshes/roca_1.obj"/>
+    <mesh name="roca_2" file="../../escenarios/edificio_informe/meshes/roca_2.obj"/>
+    <mesh name="roca_3" file="../../escenarios/edificio_informe/meshes/roca_3.obj"/>
+    <mesh name="roca_4" file="../../escenarios/edificio_informe/meshes/roca_4.obj"/>
+    <mesh name="roca_5" file="../../escenarios/edificio_informe/meshes/roca_5.obj"/>
+    <mesh name="roca_6" file="../../escenarios/edificio_informe/meshes/roca_6.obj"/>
+    <mesh name="roca_7" file="../../escenarios/edificio_informe/meshes/roca_7.obj"/>
+    <mesh name="roca_8" file="../../escenarios/edificio_informe/meshes/roca_8.obj"/>
+    <mesh name="roca_9" file="../../escenarios/edificio_informe/meshes/roca_9.obj"/>
+  </asset>
+  <worldbody>
+        <light name="luz_0" pos="-5 0 2.65" dir="0 0 -1" cutoff="110" exponent="1" diffuse="0.85 0.85 0.807" specular="0.1 0.1 0.1" attenuation="1 0.03 0.01" castshadow="false"/>
+    <light name="luz_1" pos="-5 6 2.65" dir="0 0 -1" cutoff="110" exponent="1" diffuse="0.85 0.85 0.807" specular="0.1 0.1 0.1" attenuation="1 0.03 0.01" castshadow="false"/>
+    <light name="luz_2" pos="0 1.5 2.65" dir="0 0 -1" cutoff="110" exponent="1" diffuse="0.85 0.85 0.807" specular="0.1 0.1 0.1" attenuation="1 0.03 0.01" castshadow="false"/>
+    <light name="luz_3" pos="0 6.5 2.65" dir="0 0 -1" cutoff="110" exponent="1" diffuse="0.85 0.85 0.807" specular="0.1 0.1 0.1" attenuation="1 0.03 0.01" castshadow="false"/>
+    <light name="luz_4" pos="5 6 2.65" dir="0 0 -1" cutoff="110" exponent="1" diffuse="0.85 0.85 0.807" specular="0.1 0.1 0.1" attenuation="1 0.03 0.01" castshadow="false"/>
+    <light name="luz_5" pos="5 0 2.65" dir="0 0 -1" cutoff="110" exponent="1" diffuse="0.45 0.45 0.427" specular="0.1 0.1 0.1" attenuation="1 0.03 0.01" castshadow="false"/>
+    <light name="sol" directional="true" pos="-20 0 20" dir="0.65 0.12 -0.55" diffuse="1.5 1.3 1.05" specular="0.2 0.2 0.2" castshadow="true"/>
+    <light name="relleno" directional="true" pos="0 0 10" dir="-0.2 0.1 -1" diffuse="0.12 0.13 0.16" castshadow="false"/>
+    <body name="edificio_informe">
+            <geom name="vis_revoque" type="mesh" mesh="m_revoque" material="m_revoque" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_piso_h" type="mesh" mesh="m_piso_h" material="m_piso_h" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_piso_m" type="mesh" mesh="m_piso_m" material="m_piso_m" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_madera" type="mesh" mesh="m_madera" material="m_madera" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_marco" type="mesh" mesh="m_marco" material="m_marco" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_vidrio" type="mesh" mesh="m_vidrio" material="m_vidrio" group="1" contype="0" conaffinity="0"/>
+      <geom name="vis_pieza_ext_sur_3" type="mesh" mesh="pieza_ext_sur_3" material="mt_pieza_ext_sur_3" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_pieza_ext_norte_3" type="mesh" mesh="pieza_ext_norte_3" material="mt_pieza_ext_norte_3" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_pieza_int_x_m2_0" type="mesh" mesh="pieza_int_x_m2_0" material="mt_pieza_int_x_m2_0" group="0" contype="0" conaffinity="0"/>
+      <geom name="vis_pieza_int_x_m2_2" type="mesh" mesh="pieza_int_x_m2_2" material="mt_pieza_int_x_m2_2" group="0" contype="0" conaffinity="0"/>
+            <geom name="col_ext_sur_0" type="box" pos="-6.900 -3.000 1.400" size="1.200 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_1" type="box" pos="-5.000 -3.000 0.450" size="0.700 0.100 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_2" type="box" pos="-5.000 -3.000 2.450" size="0.700 0.100 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_3" type="box" pos="0.000 -3.000 1.400" size="4.300 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_4" type="box" pos="5.000 -3.000 0.450" size="0.700 0.100 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_5" type="box" pos="5.000 -3.000 2.450" size="0.700 0.100 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_6" type="box" pos="6.900 -3.000 1.400" size="1.200 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_vidrio_-5.0" type="box" pos="-5.000 -3.000 1.500" size="0.700 0.010 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_sur_vidrio_5.0" type="box" pos="5.000 -3.000 1.500" size="0.700 0.010 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_0" type="box" pos="-6.900 9.000 1.400" size="1.200 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_1" type="box" pos="-5.000 9.000 0.450" size="0.700 0.100 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_2" type="box" pos="-5.000 9.000 2.450" size="0.700 0.100 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_3" type="box" pos="0.000 9.000 1.400" size="4.300 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_4" type="box" pos="5.000 9.000 0.450" size="0.700 0.100 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_5" type="box" pos="5.000 9.000 2.450" size="0.700 0.100 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_6" type="box" pos="6.900 9.000 1.400" size="1.200 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_vidrio_-5.0" type="box" pos="-5.000 9.000 1.500" size="0.700 0.010 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_norte_vidrio_5.0" type="box" pos="5.000 9.000 1.500" size="0.700 0.010 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_0" type="box" pos="-8.000 -1.800 1.400" size="0.100 1.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_1" type="box" pos="-8.000 0.000 0.450" size="0.100 0.700 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_2" type="box" pos="-8.000 0.000 2.450" size="0.100 0.700 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_3" type="box" pos="-8.000 3.000 1.400" size="0.100 2.300 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_4" type="box" pos="-8.000 6.000 0.450" size="0.100 0.700 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_5" type="box" pos="-8.000 6.000 2.450" size="0.100 0.700 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_6" type="box" pos="-8.000 7.800 1.400" size="0.100 1.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_vidrio_0.0" type="box" pos="-8.000 0.000 1.500" size="0.010 0.700 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_oeste_vidrio_6.0" type="box" pos="-8.000 6.000 1.500" size="0.010 0.700 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_0" type="box" pos="8.000 -1.800 1.400" size="0.100 1.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_1" type="box" pos="8.000 0.000 0.450" size="0.100 0.700 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_2" type="box" pos="8.000 0.000 2.450" size="0.100 0.700 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_3" type="box" pos="8.000 3.000 1.400" size="0.100 2.300 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_4" type="box" pos="8.000 6.000 0.450" size="0.100 0.700 0.450" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_5" type="box" pos="8.000 6.000 2.450" size="0.100 0.700 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_6" type="box" pos="8.000 7.800 1.400" size="0.100 1.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_vidrio_0.0" type="box" pos="8.000 0.000 1.500" size="0.010 0.700 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_ext_este_vidrio_6.0" type="box" pos="8.000 6.000 1.500" size="0.010 0.700 0.600" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_m2_0" type="box" pos="-2.000 -1.750 1.400" size="0.100 1.250 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_m2_1" type="box" pos="-2.000 0.000 2.450" size="0.100 0.500 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_m2_2" type="box" pos="-2.000 3.000 1.400" size="0.100 2.500 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_m2_3" type="box" pos="-2.000 6.000 2.450" size="0.100 0.500 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_m2_4" type="box" pos="-2.000 7.750 1.400" size="0.100 1.250 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_p2_0" type="box" pos="2.000 -1.750 1.400" size="0.100 1.250 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_p2_1" type="box" pos="2.000 0.000 2.450" size="0.100 0.500 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_p2_2" type="box" pos="2.000 3.825 1.400" size="0.100 3.325 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_p2_3" type="box" pos="2.000 7.800 2.250" size="0.100 0.650 0.550" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_x_p2_4" type="box" pos="2.000 8.725 1.400" size="0.100 0.275 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_y_oeste_0" type="box" pos="-6.750 3.000 1.400" size="1.250 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_y_oeste_1" type="box" pos="-5.000 3.000 2.450" size="0.500 0.100 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_y_oeste_2" type="box" pos="-3.250 3.000 1.400" size="1.250 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_y_este_0" type="box" pos="3.250 3.000 1.400" size="1.250 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_y_este_1" type="box" pos="5.000 3.000 2.450" size="0.500 0.100 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_int_y_este_2" type="box" pos="6.750 3.000 1.400" size="1.250 0.100 1.400" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-5.2_0.8_tapa" type="box" pos="-5.200 0.800 0.720" size="0.900 0.450 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-5.2_0.8_pata-1-1" type="box" pos="-6.050 0.400 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-5.2_0.8_pata-11" type="box" pos="-6.050 1.200 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-5.2_0.8_pata1-1" type="box" pos="-4.350 0.400 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-5.2_0.8_pata11" type="box" pos="-4.350 1.200 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.7_1.6_asiento" type="box" pos="-5.700 1.600 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.7_1.6_pata-1-1" type="box" pos="-5.890 1.410 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.7_1.6_pata-11" type="box" pos="-5.890 1.790 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.7_1.6_pata1-1" type="box" pos="-5.510 1.410 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.7_1.6_pata11" type="box" pos="-5.510 1.790 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.7_1.6_resp" type="box" pos="-5.700 1.800 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.7_1.6_asiento" type="box" pos="-4.700 1.600 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.7_1.6_pata-1-1" type="box" pos="-4.890 1.410 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.7_1.6_pata-11" type="box" pos="-4.890 1.790 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.7_1.6_pata1-1" type="box" pos="-4.510 1.410 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.7_1.6_pata11" type="box" pos="-4.510 1.790 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.7_1.6_resp" type="box" pos="-4.700 1.800 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.2_-0.1_asiento" type="box" pos="-5.200 -0.100 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.2_-0.1_pata-1-1" type="box" pos="-5.390 -0.290 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.2_-0.1_pata-11" type="box" pos="-5.390 0.090 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.2_-0.1_pata1-1" type="box" pos="-5.010 -0.290 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.2_-0.1_pata11" type="box" pos="-5.010 0.090 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-5.2_-0.1_resp" type="box" pos="-5.200 -0.300 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_estante_-7.75_-1.8" type="box" pos="-7.750 -1.800 0.950" size="0.200 0.600 0.950" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-6.0_6.0_tapa" type="box" pos="-6.000 6.000 0.730" size="0.700 0.350 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-6.0_6.0_pata-1-1" type="box" pos="-6.650 5.700 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-6.0_6.0_pata-11" type="box" pos="-6.650 6.300 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-6.0_6.0_pata1-1" type="box" pos="-5.350 5.700 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-6.0_6.0_pata11" type="box" pos="-5.350 6.300 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-6.0_5.3_asiento" type="box" pos="-6.000 5.300 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-6.0_5.3_pata-1-1" type="box" pos="-6.190 5.110 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-6.0_5.3_pata-11" type="box" pos="-6.190 5.490 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-6.0_5.3_pata1-1" type="box" pos="-5.810 5.110 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-6.0_5.3_pata11" type="box" pos="-5.810 5.490 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-6.0_5.3_resp" type="box" pos="-6.000 5.100 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-4.0_7.8_tapa" type="box" pos="-4.000 7.800 0.730" size="0.700 0.350 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-4.0_7.8_pata-1-1" type="box" pos="-4.650 7.500 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-4.0_7.8_pata-11" type="box" pos="-4.650 8.100 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-4.0_7.8_pata1-1" type="box" pos="-3.350 7.500 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_-4.0_7.8_pata11" type="box" pos="-3.350 8.100 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.0_7.1_asiento" type="box" pos="-4.000 7.100 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.0_7.1_pata-1-1" type="box" pos="-4.190 6.910 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.0_7.1_pata-11" type="box" pos="-4.190 7.290 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.0_7.1_pata1-1" type="box" pos="-3.810 6.910 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.0_7.1_pata11" type="box" pos="-3.810 7.290 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_-4.0_7.1_resp" type="box" pos="-4.000 6.900 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_estante_-7.75_8.0" type="box" pos="-7.750 8.000 0.950" size="0.200 0.700 0.950" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_5.0_5.0_tapa" type="box" pos="5.000 5.000 0.730" size="0.700 0.350 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_5.0_5.0_pata-1-1" type="box" pos="4.350 4.700 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_5.0_5.0_pata-11" type="box" pos="4.350 5.300 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_5.0_5.0_pata1-1" type="box" pos="5.650 4.700 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_5.0_5.0_pata11" type="box" pos="5.650 5.300 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_5.0_4.3_asiento" type="box" pos="5.000 4.300 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_5.0_4.3_pata-1-1" type="box" pos="4.810 4.110 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_5.0_4.3_pata-11" type="box" pos="4.810 4.490 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_5.0_4.3_pata1-1" type="box" pos="5.190 4.110 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_5.0_4.3_pata11" type="box" pos="5.190 4.490 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_5.0_4.3_resp" type="box" pos="5.000 4.100 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.8_7.5_tapa" type="box" pos="6.800 7.500 0.730" size="0.700 0.350 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.8_7.5_pata-1-1" type="box" pos="6.150 7.200 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.8_7.5_pata-11" type="box" pos="6.150 7.800 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.8_7.5_pata1-1" type="box" pos="7.450 7.200 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.8_7.5_pata11" type="box" pos="7.450 7.800 0.355" size="0.025 0.025 0.355" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_6.8_6.8_asiento" type="box" pos="6.800 6.800 0.430" size="0.220 0.220 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_6.8_6.8_pata-1-1" type="box" pos="6.610 6.610 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_6.8_6.8_pata-11" type="box" pos="6.610 6.990 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_6.8_6.8_pata1-1" type="box" pos="6.990 6.610 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_6.8_6.8_pata11" type="box" pos="6.990 6.990 0.205" size="0.020 0.020 0.205" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_silla_6.8_6.8_resp" type="box" pos="6.800 6.600 0.675" size="0.220 0.020 0.225" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.9_-1.8_tapa" type="box" pos="6.900 -1.800 0.720" size="0.600 0.350 0.020" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.9_-1.8_pata-1-1" type="box" pos="6.350 -2.100 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.9_-1.8_pata-11" type="box" pos="6.350 -1.500 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.9_-1.8_pata1-1" type="box" pos="7.450 -2.100 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_mesa_6.9_-1.8_pata11" type="box" pos="7.450 -1.500 0.350" size="0.025 0.025 0.350" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_brecha_borde_0" type="box" pos="2.000 7.250 1.775" size="0.100 0.090 0.075" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_brecha_borde_1" type="box" pos="2.000 7.450 1.825" size="0.100 0.110 0.125" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_brecha_borde_2" type="box" pos="2.000 7.700 1.750" size="0.100 0.075 0.050" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_brecha_borde_3" type="box" pos="2.000 7.950 1.900" size="0.100 0.125 0.200" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_brecha_borde_4" type="box" pos="2.000 8.200 1.775" size="0.100 0.090 0.075" group="3" rgba="0.9 0.2 0.2 0.3"/>
+      <geom name="col_brecha_borde_5" type="box" pos="2.000 8.350 1.760" size="0.100 0.050 0.060" group="3" rgba="0.9 0.2 0.2 0.3"/>
+            <geom name="suelo_exterior" type="plane" pos="0 0 0.002" size="40 40 0.05" material="m_suelo" contype="0" conaffinity="0"/>
+      <geom name="puerta_A_vest" type="box" pos="-1.556 -0.381 1.025" size="0.460 0.02 1.025" quat="0.9914 0 0 0.1305" material="m_madera" contype="0" conaffinity="0"/>
+      <geom name="puerta_B_vest" type="box" pos="1.556 0.381 1.025" size="0.460 0.02 1.025" quat="-0.1305 0 0 0.9914" material="m_madera" contype="0" conaffinity="0"/>
+      <geom name="puerta_C_vest" type="box" pos="-1.568 5.657 1.025" size="0.460 0.02 1.025" quat="0.9848 0 0 0.1736" material="m_madera" contype="0" conaffinity="0"/>
+      <geom name="puerta_A_C" type="box" pos="-5.381 3.444 1.025" size="0.460 0.02 1.025" quat="0.7934 0 0 0.6088" material="m_madera" contype="0" conaffinity="0"/>
+      <geom name="puerta_B_D" type="box" pos="5.381 3.444 1.025" size="0.460 0.02 1.025" quat="0.6088 0 0 0.7934" material="m_madera" contype="0" conaffinity="0"/>
+      <geom name="carton_1" type="box" pos="7.4 7.9 0.175" size="0.25 0.2 0.175" quat="0.9848 0 0 0.1736" rgba="0.40 0.31 0.21 1" />
+      <geom name="carton_2" type="box" pos="7.35 7.35 0.15" size="0.225 0.2 0.15" quat="0.9914 0 0 -0.1305" rgba="0.40 0.31 0.21 1" />
+      <geom name="carton_3" type="box" pos="7.4 7.85 0.5" size="0.2 0.175 0.15" quat="0.9990 0 0 0.0436" rgba="0.40 0.31 0.21 1" contype="0" conaffinity="0"/>
+      <geom name="carton_4" type="box" pos="-7.2 4.0 0.175" size="0.25 0.2 0.175" quat="0.9537 0 0 0.3007" rgba="0.40 0.31 0.21 1" />
+      <geom name="viga_caida" type="box" pos="4.9 0.0 0.55" size="1.4 0.14 0.14" quat="0.9877 0 0.1564 0" material="m_hormigon"/>
+      <geom name="panel_colgante_0" type="box" pos="4.4 0.55 0.45" size="0.45 0.3 0.015" quat="0.9848 0 0.1736 0" material="m_revoque" contype="0" conaffinity="0"/>
+      <geom name="panel_colgante_1" type="box" pos="5.7 -0.6 0.4" size="0.45 0.3 0.015" quat="0.9914 0 -0.1305 0" material="m_revoque" contype="0" conaffinity="0"/>
+            <geom name="escombro_0" type="mesh" mesh="roca_4" material="m_escombro" pos="5.1033 -0.1543 0.0425" quat="-0.20028 0.95817 -0.19992 -0.04288" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_1" type="mesh" mesh="roca_8" material="m_escombro" pos="5.4408 -0.9663 0.1066" quat="-0.12003 -0.82930 0.53586 0.10349" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_2" type="mesh" mesh="roca_0" material="m_escombro" pos="5.6946 0.2501 0.0483" quat="0.14511 -0.50932 0.78061 -0.33195" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_3" type="mesh" mesh="roca_1" material="m_escombro" pos="4.9706 -0.9031 0.1384" quat="-0.19625 0.19451 0.54379 -0.79243" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_4" type="mesh" mesh="roca_1" material="m_escombro" pos="4.5277 -0.7039 0.1148" quat="-0.25664 0.60038 0.66400 -0.36439" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_5" type="mesh" mesh="roca_1" material="m_escombro" pos="4.3286 0.2347 0.1450" quat="0.18720 0.32115 0.78315 0.49850" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_6" type="mesh" mesh="roca_6" material="m_escombro" pos="5.1827 0.2736 0.0670" quat="0.26552 0.43097 0.67133 0.54137" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_7" type="mesh" mesh="roca_1" material="m_escombro" pos="3.6785 -0.1884 0.1211" quat="-0.65002 -0.41057 -0.37852 -0.51539" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_8" type="mesh" mesh="roca_4" material="m_escombro" pos="5.5032 0.4666 0.0395" quat="0.83513 0.03820 -0.18261 -0.51745" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_9" type="mesh" mesh="roca_4" material="m_escombro" pos="5.0533 0.1704 0.1089" quat="-0.06925 0.14419 0.62645 -0.76288" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_10" type="mesh" mesh="roca_4" material="m_escombro" pos="5.3964 0.3699 0.0432" quat="-0.80990 -0.14348 0.01425 0.56857" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_11" type="mesh" mesh="roca_1" material="m_escombro" pos="4.6765 -0.2860 0.1670" quat="-0.60007 0.74107 -0.15858 0.25610" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_12" type="mesh" mesh="roca_4" material="m_escombro" pos="4.1504 0.3913 0.0490" quat="-0.11041 0.10555 0.98675 0.05470" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_13" type="mesh" mesh="roca_7" material="m_escombro" pos="4.0932 0.0541 0.0597" quat="-0.04883 -0.64623 0.76031 -0.04392" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_14" type="mesh" mesh="roca_3" material="m_escombro" pos="5.8174 -0.8236 0.0796" quat="-0.95264 0.14741 0.01379 0.26564" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_15" type="mesh" mesh="roca_9" material="m_escombro" pos="6.1860 0.3346 0.0857" quat="-0.38560 -0.90212 -0.04609 0.18809" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_16" type="mesh" mesh="roca_4" material="m_escombro" pos="4.5192 -1.1831 0.0329" quat="0.55087 -0.12398 -0.03601 -0.82455" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_17" type="mesh" mesh="roca_7" material="m_escombro" pos="5.5157 -0.1091 0.1543" quat="-0.70867 -0.27575 -0.37515 -0.53010" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_18" type="mesh" mesh="roca_6" material="m_escombro" pos="4.6164 0.5804 0.0620" quat="-0.53899 0.66652 -0.51050 0.06801" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_19" type="mesh" mesh="roca_4" material="m_escombro" pos="5.7881 0.1676 0.0369" quat="0.85928 0.11270 -0.08729 0.49123" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_20" type="mesh" mesh="roca_5" material="m_escombro" pos="4.7823 0.6895 0.0869" quat="-0.48407 0.63636 0.26780 -0.53759" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_21" type="mesh" mesh="roca_2" material="m_escombro" pos="4.6565 -0.9397 0.0224" quat="-0.15108 0.53010 -0.83328 0.04262" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_22" type="mesh" mesh="roca_9" material="m_escombro" pos="5.1158 1.8110 0.0857" quat="0.39892 0.57432 0.69720 0.15788" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_23" type="mesh" mesh="roca_2" material="m_escombro" pos="5.1610 0.4911 0.0660" quat="-0.65777 0.20095 -0.13863 -0.71256" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_24" type="mesh" mesh="roca_4" material="m_escombro" pos="5.6429 0.4542 0.0487" quat="0.08880 -0.15354 -0.97762 0.11313" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_25" type="mesh" mesh="roca_9" material="m_escombro" pos="5.9053 -0.4297 0.0727" quat="0.83108 -0.16765 -0.27147 0.45553" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_26" type="mesh" mesh="roca_2" material="m_escombro" pos="4.5969 -0.0065 0.0224" quat="-0.08145 -0.18044 -0.97098 0.13419" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_27" type="mesh" mesh="roca_9" material="m_escombro" pos="4.9957 -0.3459 0.0834" quat="0.94783 -0.18966 -0.22762 0.11763" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_28" type="mesh" mesh="roca_6" material="m_escombro" pos="5.4661 0.1982 0.1377" quat="0.81160 -0.40298 0.06139 0.41851" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_29" type="mesh" mesh="roca_6" material="m_escombro" pos="4.7061 -1.3754 0.0620" quat="-0.52340 0.81202 -0.21329 -0.14555" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_30" type="mesh" mesh="roca_7" material="m_escombro" pos="4.1568 -0.6901 0.0597" quat="0.06387 0.16052 -0.98489 0.01236" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_31" type="mesh" mesh="roca_8" material="m_escombro" pos="5.3242 -1.0640 0.0991" quat="0.51585 0.04671 0.51590 -0.68232" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_32" type="mesh" mesh="roca_8" material="m_escombro" pos="5.6261 -0.5058 0.1239" quat="0.39326 0.22699 0.36277 0.81377" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_33" type="mesh" mesh="roca_2" material="m_escombro" pos="5.2489 -0.7934 0.0724" quat="-0.27671 -0.77169 -0.56749 -0.07666" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_34" type="mesh" mesh="roca_4" material="m_escombro" pos="5.4102 0.2986 0.0716" quat="-0.32602 0.92436 0.17209 -0.09821" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_35" type="mesh" mesh="roca_5" material="m_escombro" pos="4.2658 0.6931 0.0737" quat="-0.12274 0.62880 0.72628 -0.24912" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_36" type="mesh" mesh="roca_8" material="m_escombro" pos="5.0459 0.6311 0.1066" quat="-0.14941 -0.87944 -0.44895 -0.05206" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_37" type="mesh" mesh="roca_5" material="m_escombro" pos="4.8460 -0.1041 0.0877" quat="0.75015 -0.52578 0.38577 -0.10958" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_38" type="mesh" mesh="roca_7" material="m_escombro" pos="4.2925 -0.1770 0.0915" quat="-0.72252 -0.05295 -0.41936 0.54708" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_39" type="mesh" mesh="roca_5" material="m_escombro" pos="4.0950 -1.1409 0.0737" quat="-0.14442 0.69093 0.66745 -0.23721" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_40" type="mesh" mesh="roca_6" material="m_escombro" pos="3.9101 -0.9750 0.0670" quat="-0.53898 -0.74969 -0.27304 -0.27001" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_41" type="mesh" mesh="roca_3" material="m_escombro" pos="5.9959 0.1583 0.0780" quat="-0.61417 0.19746 -0.16191 0.74672" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_42" type="mesh" mesh="roca_1" material="m_escombro" pos="5.3945 -0.4957 0.1730" quat="-0.00515 -0.24551 -0.96146 0.12369" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_43" type="mesh" mesh="roca_8" material="m_escombro" pos="4.9846 -0.4874 0.3378" quat="0.45196 0.73676 0.46636 0.18823" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_44" type="mesh" mesh="roca_9" material="m_escombro" pos="5.0886 0.0178 0.1075" quat="0.11521 -0.19980 0.44663 0.86448" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_45" type="mesh" mesh="roca_9" material="m_escombro" pos="4.8138 0.1750 0.0857" quat="0.40546 0.88998 0.15450 -0.14024" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_46" type="mesh" mesh="roca_9" material="m_escombro" pos="4.9148 -0.6051 0.1353" quat="-0.66085 0.70944 -0.04081 -0.24148" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_47" type="mesh" mesh="roca_2" material="m_escombro" pos="5.3549 0.0081 0.0611" quat="-0.85851 -0.14268 -0.08637 -0.48492" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_48" type="mesh" mesh="roca_6" material="m_escombro" pos="1.0860 7.8686 0.1569" quat="-0.37531 -0.86502 0.01128 0.33281" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_49" type="mesh" mesh="roca_1" material="m_escombro" pos="0.3206 6.7825 0.1168" quat="-0.32981 0.69311 0.50713 -0.39197" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_50" type="mesh" mesh="roca_4" material="m_escombro" pos="1.2893 7.8752 0.0329" quat="0.41858 -0.12796 -0.01670 -0.89896" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_51" type="mesh" mesh="roca_3" material="m_escombro" pos="0.1690 7.7183 0.0796" quat="-0.96802 0.14618 0.02343 0.20254" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_52" type="mesh" mesh="roca_9" material="m_escombro" pos="0.4525 7.5635 0.1048" quat="0.20081 -0.70548 0.54944 -0.40011" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_53" type="mesh" mesh="roca_5" material="m_escombro" pos="1.0588 8.0716 0.0933" quat="0.34206 -0.00778 -0.58721 -0.73356" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_54" type="mesh" mesh="roca_9" material="m_escombro" pos="0.7866 7.0041 0.0727" quat="-0.93816 0.25237 0.19522 -0.13436" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_55" type="mesh" mesh="roca_4" material="m_escombro" pos="1.7289 7.7546 0.0329" quat="-0.67480 0.11669 0.05524 0.72662" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_56" type="mesh" mesh="roca_4" material="m_escombro" pos="1.3286 7.6406 0.0329" quat="0.21805 0.11152 -0.06504 0.96736" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_57" type="mesh" mesh="roca_8" material="m_escombro" pos="0.2586 6.5491 0.1066" quat="0.00441 -0.10731 0.98155 0.15816" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_58" type="mesh" mesh="roca_1" material="m_escombro" pos="0.6136 8.7051 0.2066" quat="-0.14167 -0.57669 -0.37163 -0.71361" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_59" type="mesh" mesh="roca_8" material="m_escombro" pos="1.1193 7.5823 0.1396" quat="-0.29018 -0.72718 -0.37563 -0.49590" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_60" type="mesh" mesh="roca_2" material="m_escombro" pos="1.5287 8.2701 0.0613" quat="-0.26135 -0.03797 0.16148 0.95088" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_61" type="mesh" mesh="roca_2" material="m_escombro" pos="1.6933 7.4798 0.0617" quat="0.11217 -0.20174 0.00616 0.97297" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_62" type="mesh" mesh="roca_0" material="m_escombro" pos="1.8974 7.6616 0.0840" quat="-0.97456 0.10986 -0.16071 0.11111" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_63" type="mesh" mesh="roca_4" material="m_escombro" pos="1.6024 8.0706 0.0347" quat="-0.13403 0.63827 -0.73012 -0.20387" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_64" type="mesh" mesh="roca_6" material="m_escombro" pos="0.8455 7.8922 0.0670" quat="0.04009 0.14453 0.78479 0.60134" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_65" type="mesh" mesh="roca_8" material="m_escombro" pos="1.5177 7.9079 0.0470" quat="0.65630 -0.38885 -0.43390 0.47937" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_66" type="mesh" mesh="roca_1" material="m_escombro" pos="1.4183 7.4689 0.1300" quat="-0.66548 0.01881 0.46456 -0.58392" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_67" type="mesh" mesh="roca_1" material="m_escombro" pos="-0.2906 8.6028 0.1211" quat="-0.82804 -0.55837 -0.00786 0.05003" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_68" type="mesh" mesh="roca_1" material="m_escombro" pos="2.6017 8.2641 0.1391" quat="-0.20416 -0.32572 -0.71918 -0.57881" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_69" type="mesh" mesh="roca_3" material="m_escombro" pos="2.6696 7.4675 0.0444" quat="0.23458 -0.10639 -0.92045 -0.29399" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_70" type="mesh" mesh="roca_2" material="m_escombro" pos="3.3505 7.9938 0.0210" quat="-0.17951 0.64865 -0.73961 -0.00168" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_71" type="mesh" mesh="roca_3" material="m_escombro" pos="3.1572 7.1171 0.0444" quat="-0.00838 0.64180 0.66832 0.37600" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_72" type="mesh" mesh="roca_7" material="m_escombro" pos="2.2179 7.5094 0.1404" quat="-0.55767 -0.21585 -0.30177 -0.74252" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_73" type="mesh" mesh="roca_9" material="m_escombro" pos="2.8575 7.4926 0.1231" quat="0.07916 -0.51028 -0.85530 -0.04256" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_74" type="mesh" mesh="roca_0" material="m_escombro" pos="3.0691 8.1599 0.0274" quat="-0.07402 -0.22836 -0.97052 -0.02153" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_75" type="mesh" mesh="roca_0" material="m_escombro" pos="3.6965 8.2818 0.0826" quat="0.07764 -0.00164 0.14553 0.98630" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_76" type="mesh" mesh="roca_7" material="m_escombro" pos="1.8034 7.9933 0.1404" quat="0.81523 0.32154 0.18475 0.44483" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_77" type="mesh" mesh="roca_1" material="m_escombro" pos="2.3768 6.9701 0.1168" quat="-0.01950 -0.17195 -0.84144 0.51189" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_78" type="mesh" mesh="roca_6" material="m_escombro" pos="3.1150 7.7562 0.0670" quat="0.32801 0.50806 0.61516 0.50582" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_79" type="mesh" mesh="roca_6" material="m_escombro" pos="2.3379 7.8959 0.1443" quat="-0.78841 0.50581 0.34425 -0.06371" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_80" type="mesh" mesh="roca_4" material="m_escombro" pos="2.3997 8.1926 0.0665" quat="0.04246 -0.45810 -0.75880 0.46104" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_81" type="mesh" mesh="roca_8" material="m_escombro" pos="2.8926 7.7320 0.2252" quat="-0.28055 -0.92352 -0.01165 -0.26127" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_82" type="mesh" mesh="roca_6" material="m_escombro" pos="2.7010 7.0578 0.0969" quat="-0.62090 0.73243 0.07370 -0.26943" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_83" type="mesh" mesh="roca_3" material="m_escombro" pos="3.4382 7.3032 0.0796" quat="-0.31995 0.09477 -0.11374 0.93580" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_84" type="mesh" mesh="roca_1" material="m_escombro" pos="2.4806 7.6186 0.1533" quat="0.13678 -0.53339 0.33954 -0.76256" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_85" type="mesh" mesh="roca_6" material="m_escombro" pos="2.0930 7.8498 0.0906" quat="-0.20374 -0.55688 -0.68839 -0.41772" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_86" type="mesh" mesh="roca_5" material="m_escombro" pos="2.3946 8.0395 0.0975" quat="-0.95590 0.27988 -0.08754 -0.01618" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_87" type="mesh" mesh="roca_6" material="m_escombro" pos="2.2116 8.3159 0.0670" quat="-0.56407 -0.70928 0.36540 0.21267" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_88" type="mesh" mesh="roca_0" material="m_escombro" pos="2.7986 7.8247 0.0821" quat="-0.54112 -0.10838 0.25735 -0.79323" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_89" type="mesh" mesh="roca_4" material="m_escombro" pos="2.7629 7.1755 0.0327" quat="0.33418 0.10289 -0.07717 0.93369" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_90" type="mesh" mesh="roca_2" material="m_escombro" pos="-4.1610 6.5446 0.0210" quat="-0.02434 -0.65176 -0.73687 0.17786" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_91" type="mesh" mesh="roca_3" material="m_escombro" pos="-4.2186 6.0890 0.0557" quat="-0.29436 -0.93061 -0.15355 -0.15408" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_92" type="mesh" mesh="roca_0" material="m_escombro" pos="-4.3068 5.7993 0.0826" quat="-0.93747 -0.14153 0.03396 0.31618" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_93" type="mesh" mesh="roca_9" material="m_escombro" pos="-4.5218 5.5004 0.0727" quat="0.12598 0.11919 -0.29596 0.93932" friction="0.9 0.02 0.001"/>
+      <geom name="escombro_94" type="mesh" mesh="roca_9" material="m_escombro" pos="-3.9331 6.4211 0.1048" quat="0.43893 -0.71617 -0.53544 0.08800" friction="0.9 0.02 0.001"/>
+    </body>
+        <camera name="inf_vista_aerea" pos="0.000 -17.000 13.000" xyaxes="1.0000 -0.0000 0.0000 0.0000 0.5208 0.8537" fovy="45"/>
+    <camera name="inf_planta" pos="0.000 3.000 24.000" xyaxes="1.0000 0.0000 0.0000 -0.0000 1.0000 0.0000" fovy="45"/>
+    <camera name="inf_exterior" pos="0.000 -11.000 1.700" xyaxes="1.0000 -0.0000 0.0000 0.0000 0.0273 0.9996" fovy="60"/>
+    <camera name="inf_vestibulo" pos="0.000 -2.550 1.550" xyaxes="1.0000 -0.0000 0.0000 0.0000 0.0409 0.9992" fovy="70"/>
+    <camera name="inf_sala_a" pos="-7.550 -2.550 1.500" xyaxes="0.7262 -0.6875 0.0000 0.0531 0.0561 0.9970" fovy="75"/>
+    <camera name="inf_sala_a_grieta" pos="-5.600 -0.400 1.500" xyaxes="-0.3939 -0.9191 0.0000 0.0362 -0.0155 0.9992" fovy="60"/>
+    <camera name="inf_sala_b_techo" pos="7.500 -2.600 1.400" xyaxes="0.7328 0.6805 -0.0000 0.0533 -0.0574 0.9969" fovy="75"/>
+    <camera name="inf_brecha" pos="-0.700 3.300 1.500" xyaxes="0.8575 -0.5145 0.0000 0.0584 0.0974 0.9935" fovy="70"/>
+    <camera name="inf_sala_c_humedad" pos="-6.600 4.900 1.500" xyaxes="0.7619 -0.6476 0.0000 -0.0247 -0.0290 0.9993" fovy="70"/>
+  </worldbody>
+</mujocoinclude>

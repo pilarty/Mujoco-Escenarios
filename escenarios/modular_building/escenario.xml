@@ -1,4 +1,4 @@
-<mujoco model="14_modular_building">
+<mujocoinclude>
   <!--
     ========================================
     MUNDO 14: CONSTRUCCIÓN MODULAR
@@ -22,17 +22,7 @@
     organización facilita copy-paste de módulos completos
   -->
 
-  <include file="g1.xml"/>
-
-  <visual>
-    <headlight diffuse="0.5 0.5 0.5" ambient="0.2 0.2 0.2" specular="0.8 0.8 0.8"/>
-    <global azimuth="160" elevation="-25"/>
-    <quality shadowsize="4096"/>
-  </visual>
-
-  <asset>
-    <texture type="skybox" builtin="gradient" rgb1="0.4 0.6 0.8" rgb2="0.1 0.1 0.15" width="512" height="3072"/>
-    
+  <asset>    
     <!-- LIBRERÍA DE TEXTURAS REUTILIZABLES -->
     <texture type="2d" name="floor_tile" builtin="checker" 
              rgb1="0.35 0.35 0.4" rgb2="0.4 0.4 0.45" width="300" height="300"/>
@@ -56,12 +46,6 @@
     <light name="main_ceiling_2" pos="5 0 2.8" diffuse="0.7 0.7 0.7" castshadow="true"/>
     <light name="corridor_light" pos="0 5 2.8" diffuse="0.6 0.6 0.6" castshadow="false"/>
     <light name="ambient_fill" directional="true" pos="0 0 8" dir="0 0 -1" diffuse="0.3 0.3 0.3"/>
-    
-    <!-- ======================================== -->
-    <!-- SUELO BASE -->
-    <!-- ======================================== -->
-    
-    <geom name="floor_base" type="plane" size="0 0 0.05" material="floor_mat" friction="1 0.005 0.0001"/>
     
     <!-- ======================================== -->
     <!-- MÓDULO 1: HABITACIÓN OESTE -->
@@ -180,4 +164,4 @@
     - Grosor pared: 0.3m (0.15m size)
   -->
 
-</mujoco>
+</mujocoinclude>

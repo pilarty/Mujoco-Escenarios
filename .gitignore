@@ -14,3 +14,16 @@ Thumbs.db
 # MuJoCo
 *.log
 *.mp4
+
+# LocoMuJoCo generated artifacts
+LocoMuJoCo_recordings/
+training/imitation/
+training/smoke_test*.txt
+grabaciones/
+mapas/
+simulaciones/g1_saca_fotos/reporte/images/
+
+# edificio_informe: se regenera con descargar_texturas.py + generar_edificio.py
+escenarios/edificio_informe/assets/
+escenarios/edificio_informe/meshes/
+escenarios/edificio_informe/renders/
