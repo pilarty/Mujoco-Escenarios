@@ -10,7 +10,7 @@ from odometria_lidar import calzar, puntos_2d, un_punto_por_celda
 
 TAM_MAPA = 40.0       # m de lado de la grilla, centrada en el punto de partida
 RANGO_UTIL = 10.0     # m: mas lejos que esto no se usa ni para calzar ni para el mapa (el error angular se agranda con la distancia y en espacios abiertos se marcaria como libre media ciudad)
-BAJOS_Z = (0.10, 0.50)    # m sobre el piso: lo que la camara de profundidad ve en esta franja se cuenta como obstaculo bajo (el LiDAR lo ve mal o no lo ve)
+BAJOS_Z = (0.10, 1.30)    # m sobre el piso: lo que la camara de profundidad ve en esta franja se cuenta como obstaculo bajo (el LiDAR lo ve mal o no lo ve)
 BAJOS_DIST = (0.4, 3.0)   # m: solo se usan puntos de profundidad en este rango (mas lejos la pose estimada los corre demasiado)
 BAJOS_VISTAS = 2          # una celda cuenta como obstaculo bajo si se la vio en al menos tantas imagenes
 TILT_GRAVEDAD = True      # la inclinacion (roll, pitch) sale de la gravedad como en un IMU real, no de integrar el giroscopio (que se corre unos grados en minutos); el rumbo sigue siendo el estimado
@@ -93,7 +93,7 @@ def slam_R_camara(slam, data, cam_id, torso_id):
     return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]]) @ data.cam_xmat[cam_id].reshape(3, 3)
 
 
-def slam_bajos(slam, data, cam_id, torso_id, depth, f, paso=4):
+def slam_bajos(slam, data, cam_id, torso_id, depth, f, paso=2):
     """Suma a la capa de obstaculos bajos lo que ve la camara de profundidad entre BAJOS_Z de altura. Se usa solo para planificar:
     no entra al calce del LiDAR ni al mapa de paredes. La orientacion es la estimada (roll y pitch del giroscopio), la altura de la camara es la del robot."""
     alto, ancho = depth.shape

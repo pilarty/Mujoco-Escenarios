@@ -47,8 +47,17 @@ BACKEND_MISSION_STATUS_URL = "http://127.0.0.1:8000/mission/status"
 LAT_BACKEND = []   # (segundos que tardo el back en contestar cada foto, codigo HTTP)
 # Escenario a cargar
 SCENARIO = "edificio_informe"
-DEPLOY_YAML_PATH = "g1_navigation_integration/policy/deploy.yaml"
-POLICY_ONNX_PATH = "g1_navigation_integration/policy/policy.onnx"
+# Version del robot: 29 (G1 de 29 DOF, politica original) o 23 (G1 EDU Standard, 23 DOF).
+# Se elige con la variable de entorno G1_DOF (en PowerShell: $env:G1_DOF=23) o cambiando el 29 de abajo.
+# Cada version usa su propio MJCF (unitree_g1/scene.xml o scene_23dof.xml) y su propia carpeta de politica
+# (deploy.yaml + policy.onnx): g1_navigation_integration/policy o policy_23dof.
+ROBOT_DOF = int(os.environ.get("G1_DOF", "29"))
+if ROBOT_DOF not in (29, 23):
+    raise SystemExit(f"G1_DOF tiene que ser 29 o 23 (vale {ROBOT_DOF})")
+_POLICY_DIR = "g1_navigation_integration/policy" if ROBOT_DOF == 29 else "g1_navigation_integration/policy_23dof"
+DEPLOY_YAML_PATH = f"{_POLICY_DIR}/deploy.yaml"
+POLICY_ONNX_PATH = f"{_POLICY_DIR}/policy.onnx"
+SCENE_XML = "scene.xml" if ROBOT_DOF == 29 else "scene_23dof.xml"
 NAV_CONFIG_PATH = "g1_nav_config.yaml"
 
 # Directorios para capturas
@@ -69,7 +78,7 @@ PELVIS_GYRO_SENSOR = "imu-pelvis-angular-velocity"
 
 # Orden de las 29 articulaciones actuadas: idéntico al bloque <actuator> de
 # unitree_g1/g1.xml y a los arrays de deploy.yaml (joint_ids_map identidad).
-JOINT_NAMES = [
+JOINT_NAMES_29 = [
     "left_hip_pitch_joint", "left_hip_roll_joint", "left_hip_yaw_joint",
     "left_knee_joint", "left_ankle_pitch_joint", "left_ankle_roll_joint",
     "right_hip_pitch_joint", "right_hip_roll_joint", "right_hip_yaw_joint",
@@ -80,6 +89,26 @@ JOINT_NAMES = [
     "right_shoulder_pitch_joint", "right_shoulder_roll_joint", "right_shoulder_yaw_joint",
     "right_elbow_joint", "right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint",
 ]
+
+# Orden de las 23 articulaciones del G1 EDU Standard: el del MJCF con el que se entrena en mjlab
+# (Unitree-G1-23Dof-Flat), idéntico al bloque <actuator> de unitree_g1/g1_23dof.xml y a los arrays de
+# g1_navigation_integration/policy_23dof/deploy.yaml. Sin waist_roll, waist_pitch, wrist_pitch ni wrist_yaw.
+JOINT_NAMES_23 = [
+    "left_hip_pitch_joint", "left_hip_roll_joint", "left_hip_yaw_joint",
+    "left_knee_joint", "left_ankle_pitch_joint", "left_ankle_roll_joint",
+    "right_hip_pitch_joint", "right_hip_roll_joint", "right_hip_yaw_joint",
+    "right_knee_joint", "right_ankle_pitch_joint", "right_ankle_roll_joint",
+    "waist_yaw_joint",
+    "left_shoulder_pitch_joint", "left_shoulder_roll_joint", "left_shoulder_yaw_joint",
+    "left_elbow_joint", "left_wrist_roll_joint",
+    "right_shoulder_pitch_joint", "right_shoulder_roll_joint", "right_shoulder_yaw_joint",
+    "right_elbow_joint", "right_wrist_roll_joint",
+]
+
+JOINT_NAMES = JOINT_NAMES_29 if ROBOT_DOF == 29 else JOINT_NAMES_23
+N_JOINTS = len(JOINT_NAMES)
+# vector de observacion: ang_vel(3) + gravedad(3) + comando(3) + fase(2) + pos(N) + vel(N) + ultima accion(N)
+OBS_DIM = 3 + 3 + 3 + 2 + 3 * N_JOINTS   # 98 con 29 DOF, 80 con 23 DOF
 
 GRAVITY_WORLD = np.array([0.0, 0.0, -1.0])
 LIDAR_BODY = "torso_link"
@@ -214,7 +243,7 @@ def build_model():
 
     xml_content = f"""
 <mujoco model="g1 con {SCENARIO}">
-  <include file="scene.xml"/>
+  <include file="{SCENE_XML}"/>
   <include file="{rel_path}/escenario.xml"/>
 {obstaculos_xml}</mujoco>
 """
@@ -493,7 +522,13 @@ def main():
     except Exception as e:
         print(f"[g1_nav] No se pudo calcular el room layout ({e}).")
 
+    print(f"[g1_nav] robot: G1 de {ROBOT_DOF} DOF ({SCENE_XML}); politica: {POLICY_ONNX_PATH}")
+    if not os.path.exists(POLICY_ONNX_PATH):
+        raise SystemExit(f"[g1_nav] falta {POLICY_ONNX_PATH}: copia ahi el policy.onnx entrenado para {ROBOT_DOF} DOF (junto a su deploy.yaml)")
     deploy_cfg = load_yaml(DEPLOY_YAML_PATH)
+    for _k in ("stiffness", "damping", "default_joint_pos"):
+        if len(deploy_cfg[_k]) != N_JOINTS:
+            raise ValueError(f"{DEPLOY_YAML_PATH}: '{_k}' tiene {len(deploy_cfg[_k])} valores y el robot tiene {N_JOINTS} articulaciones")
 
     stiffness = np.array(deploy_cfg["stiffness"], dtype=np.float64)
     damping = np.array(deploy_cfg["damping"], dtype=np.float64)
@@ -579,10 +614,10 @@ def main():
     input_name = session.get_inputs()[0].name
     output_name = session.get_outputs()[0].name
     expected_obs_dim = session.get_inputs()[0].shape[-1]
-    if expected_obs_dim != 98:
+    if expected_obs_dim != OBS_DIM:
         raise ValueError(
-            f"La red espera {expected_obs_dim} observaciones, el port construye 98. "
-            "Revisar el orden del vector de observaciones antes de continuar."
+            f"La red espera {expected_obs_dim} observaciones, el port construye {OBS_DIM} (robot de {ROBOT_DOF} DOF). "
+            "Si la politica es de otro robot, cambia G1_DOF o POLICY_ONNX_PATH; si no, revisar el orden del vector de observaciones."
         )
 
     nav_state = {
@@ -593,7 +628,7 @@ def main():
         "solo_pausa_final": bool(destino) or explorando,   # ruta planificada: pausa y foto solo en el ultimo waypoint
     }
     phase_state = {"global_phase": 0.0}
-    last_action = np.zeros(29, dtype=np.float64)
+    last_action = np.zeros(N_JOINTS, dtype=np.float64)
 
     print(f"[g1_nav] waypoints={waypoints} arrival_radius={arrival_radius} pause_duration={pause_duration}")
 
