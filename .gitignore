@@ -27,3 +27,12 @@ simulaciones/g1_saca_fotos/reporte/images/
 escenarios/edificio_informe/assets/
 escenarios/edificio_informe/meshes/
 escenarios/edificio_informe/renders/
+
+# Escenas y datos pesados: se regeneran con los scripts de dataset_sim o se bajan de Sketchfab
+escenarios/variantes/
+dataset_sim/texturas/
+dataset_sim/procthor/
+dataset_sim/danos_reales/*/
+dataset_sim/*.png
+escaneos/*
+!escaneos/resultados_pruebas/
