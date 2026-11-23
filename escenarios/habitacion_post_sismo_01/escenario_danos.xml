@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Descripción semántica de la escena "habitacion_post_sismo_01".
+  Complementa a escenario.xml (que sólo referencia las mallas para MuJoCo):
+  acá se documenta la habitación, la puerta y los daños que se le vayan
+  agregando (uno por uno, como .obj propio), con su ubicación, extensión
+  y severidad.
+
+  Estado actual: habitación base sin daños. Cada vez que se agregue un
+  .obj de daño a escenario.xml, agregar acá su <dano> correspondiente
+  dentro de <danos_seleccionados>.
+-->
+<escena_dano_estructural id="habitacion_post_sismo_01" evento="sismo" version="2.0">
+
+  <habitacion>
+    <dimensiones ancho="4.0" profundidad="5.0" altura="2.8" espesor_muros="0.2" unidad="m"/>
+    <origen_coordenadas descripcion="Centro geométrico de la habitación, piso en z=0. Coincide con el pos/euler del body en escenario.xml."/>
+    <textura_estructura fuente="escenarios/habitacion_daniada/meshes/texture_pbr_20250901.png (copiada a meshes/ de este escenario)" mapeo="UV plana por cara (proyección según el eje constante de cada polígono), tileada cada 2 m" descripcion="Se aplica a meshes/habitacion_post_sismo_01_estructura.obj (paredes/piso/techo/marco de puerta)."/>
+    <cerramiento>
+      <muro id="muro_norte" ubicacion="y = +2.5 a +2.7" abertura="ninguna"/>
+      <muro id="muro_sur" ubicacion="y = -2.5 a -2.7" abertura="puerta"/>
+      <muro id="muro_este" ubicacion="x = +2.0 a +2.2" abertura="ninguna"/>
+      <muro id="muro_oeste" ubicacion="x = -2.0 a -2.2" abertura="ninguna"/>
+      <piso z="0.0"/>
+      <techo z="2.8"/>
+    </cerramiento>
+  </habitacion>
+
+  <puerta pared="sur" estado="abierta" ancho="1.0" alto="2.1" unidad="m" posicion_x="0.0" descripcion="Vano centrado en el muro sur, sin hoja de puerta modelada (abertura libre); marco (jambas + cabezal) incluido en meshes/habitacion_post_sismo_01_estructura.obj junto con paredes/piso/techo."/>
+
+  <danos_seleccionados criterio_seleccion="Se van agregando de a uno, cada uno como su propio .obj (ver geometria_ref), manteniendo coherencia física entre sí y con la habitación.">
+    <!--
+      Plantilla para cada daño nuevo:
+      <dano tipo="..." ubicacion="..." severidad="...">
+        <extension .../>
+        <descripcion>...</descripcion>
+        <geometria_ref mesh_obj="meshes/....obj" geom="geom_..." material="mat_..."/>
+      </dano>
+    -->
+  </danos_seleccionados>
+
+</escena_dano_estructural>

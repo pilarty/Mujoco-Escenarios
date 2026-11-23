@@ -28,9 +28,22 @@ UTIL = 0.85             # que parte del campo visual se usa para ver un dano ent
 D_MIN, D_CERCA, D_MAX_FINA = 0.8, 1.0, 2.6   # m: distancia minima a la pared, distancia de la foto "de cerca", maxima a la que todavia sirve la foto
 
 
+def _cnn_veredicto(url, rec):
+    """Manda el recorte al servidor del detector del back (escaneos/prueba_integral/servidor_detector.py) y devuelve (hay_dano, prob)."""
+    import io
+    import requests
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.fromarray(rec).save(buf, format="PNG")
+    r = requests.post(url, data=buf.getvalue(), timeout=60).json()
+    return r["hay"], r["prob"]
+
+
 def danos_crear(cfg):
-    """Estado del detector simulado, o None si el yaml no lo pide ('detector_simulado: true')."""
-    if not cfg.get("detector_simulado"):
+    """Estado del detector, o None si el yaml no lo pide. Con 'detector_simulado: true' el veredicto sale de los danos del yaml; con
+    'detector_cnn: true' sale del modelo de deteccion del back aplicado a la foto (o al recorte) y el yaml no declara danos."""
+    cnn = bool(cfg.get("detector_cnn"))
+    if not cfg.get("detector_simulado") and not cnn:
         return None
     reales = []
     for i, d in enumerate(cfg.get("danos") or []):
@@ -44,7 +57,8 @@ def danos_crear(cfg):
     return {"reales": reales, "p_max": float(cfg.get("detector_prob_max", 0.9)), "area_ref": float(cfg.get("detector_area_ref", 0.04)),
             "falsos": float(cfg.get("detector_falsos", 0.02)), "grilla": (int(grilla[0]), int(grilla[1])),
             "rng": np.random.default_rng(int(cfg.get("detector_semilla", 0))), "alto": float(cfg.get("alto_pared", 2.8)),
-            "fotos": [], "dets": [], "hallazgos": []}
+            "fotos": [], "dets": [], "hallazgos": [],
+            "cnn": cfg.get("detector_url", "http://127.0.0.1:8010") if cnn else None}
 
 
 def _fraccion_visible(d, cam_pos, R_cam, depth, f, ventana):
@@ -82,7 +96,15 @@ def _fraccion_visible(d, cam_pos, R_cam, depth, f, ventana):
 
 def _veredicto(dn, cam_pos, R_cam, depth, f, ventana, falsos=None):
     """Lo que diria el detector del back para esa ventana de la imagen: {'hay': bool, 'prob': 0 a 1, 'vistos': [(indice del dano real, fraccion)], 'falso': bool}.
-    Mas grande se ve el dano en la ventana, mas probable es detectarlo; con ninguno a la vista hay una probabilidad chica de falso positivo."""
+    Mas grande se ve el dano en la ventana, mas probable es detectarlo; con ninguno a la vista hay una probabilidad chica de falso positivo.
+    Con la CNN, la ventana se recorta de la foto RGB (que puede tener otra resolucion que la de profundidad) y se pasa por el modelo de deteccion del back."""
+    if dn.get("cnn") is not None:
+        img = dn["img"]
+        ky, kx = img.shape[0] / depth.shape[0], img.shape[1] / depth.shape[1]
+        u0, v0, u1, v1 = ventana
+        rec = img[int(round(v0 * ky)):int(round(v1 * ky)), int(round(u0 * kx)):int(round(u1 * kx)), :3]
+        hay, prob = _cnn_veredicto(dn["cnn"], np.ascontiguousarray(rec))
+        return {"hay": bool(hay), "prob": float(prob), "vistos": [], "falso": False}
     ps, vistos = [], []
     for d in dn["reales"]:
         fr = _fraccion_visible(d, cam_pos, R_cam, depth, f, ventana)
@@ -174,7 +196,7 @@ def dn_foto(dn, slam, data, cam_id, torso_id, depth, f, n_foto, t_sim):
     dn["fotos"].append({"n": n_foto, "t": t_sim, "hay": v["hay"], "prob": v["prob"], "falso": v["falso"], "vistos": [i for i, _ in v["vistos"]]})
     a_la_vista = ("; reales a la vista: " + ", ".join(f"#{i} ({100 * fr:.1f}% de la imagen)" for i, fr in v["vistos"])) if v["vistos"] else ""
     if not v["hay"]:
-        return f"[g1_nav] detector (simulado): foto {n_foto} sin dano ({100 * v['prob']:.0f}% de dano){a_la_vista}"
+        return f"[g1_nav] detector ({'CNN' if dn.get('cnn') is not None else 'simulado'}): foto {n_foto} sin dano ({100 * v['prob']:.0f}% de dano){a_la_vista}"
     R_est = slam["R"] @ (data.xmat[torso_id].reshape(3, 3).T @ R_cam)          # la misma pose estimada que usa la cobertura
     pos_est = np.array([slam["tr"][0], slam["tr"][1], cam_pos[2]])
     planos = _planos(pos_est, R_est, depth, f, dn["alto"], dn["rng"])
@@ -195,10 +217,10 @@ def dn_foto(dn, slam, data, cam_id, torso_id, depth, f, n_foto, t_sim):
     for z in zonas:
         dn["dets"].append({"foto": n_foto, "prob": v["prob"], "falso": v["falso"], "zona": z})
     if not zonas:
-        return f"[g1_nav] detector (simulado): foto {n_foto} DANO ({100 * v['prob']:.0f}%), sin pared plana para ubicarlo{a_la_vista}"
+        return f"[g1_nav] detector ({'CNN' if dn.get('cnn') is not None else 'simulado'}): foto {n_foto} DANO ({100 * v['prob']:.0f}%), sin pared plana para ubicarlo{a_la_vista}"
     z0, z1 = min(z["z"][0] for z in zonas), max(z["z"][1] for z in zonas)
     c = _centro(zonas[0])
-    return (f"[g1_nav] detector (simulado): foto {n_foto} DANO ({100 * v['prob']:.0f}%), {positivos} de {cols * filas} recortes; "
+    return (f"[g1_nav] detector ({'CNN' if dn.get('cnn') is not None else 'simulado'}): foto {n_foto} DANO ({100 * v['prob']:.0f}%), {positivos} de {cols * filas} recortes; "
             f"pared {_cara_texto(zonas[0]['n'])} cerca de ({c[0]:.1f}, {c[1]:.1f}), altura {z0:.1f}-{z1:.1f} m{a_la_vista}")
 
 
@@ -341,7 +363,7 @@ def dn_cierre(dn, slam, cam_z, f, ruta_base):
     hall = dn_agrupar(dn)
     enc, reales, falsos = dn_evaluar(dn, slam)
     pos = sum(1 for x in dn["fotos"] if x["hay"])
-    lineas = [f"[g1_nav] detector (simulado): {len(dn['fotos'])} fotos, {pos} con dano; {len(hall)} hallazgos agrupados; "
+    lineas = [f"[g1_nav] detector ({'CNN' if dn.get('cnn') is not None else 'simulado'}): {len(dn['fotos'])} fotos, {pos} con dano; {len(hall)} hallazgos agrupados; "
               f"danos reales del yaml encontrados: {len(enc)} de {len(reales)}; hallazgos sin dano real: {len(falsos)}"]
     lineas += ["[g1_nav] " + dn_texto_hallazgo(h, cam_z, f) for h in hall]
     perdidos = [r for r in reales if r not in enc]

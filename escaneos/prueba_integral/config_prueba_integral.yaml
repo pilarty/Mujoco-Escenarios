@@ -1,0 +1,66 @@
+# Configuración de navegación para launch_g1_nav.py
+# (Todo lo que SÍ es parte del contrato de la red ONNX vive en
+# g1_navigation_integration/policy/deploy.yaml y no se duplica acá.)
+
+# Secuencia de objetivos (x, y) en el mundo, caminados en orden.
+#waypoints: [[0.0, 2.0], [-3.0, 2.0], [-3.0, -2.0], [4.0, -2.0], [4.0, 2.0], [0.0, 2.0], [0.0, 0.0]]
+waypoints: [[0.0, 2.8], [3.0, 2.8], [3.0, -2.5], [3.0, 2.8], [0.0, 2.8], [0.0, -2.8], [-3.0, -2.8], [-3.0, 2.0]]
+# Distancia (m) al waypoint actual por debajo de la cual se considera
+# "llegada" y arranca la pausa. Más laxo que el goal_tolerance interno
+# de deploy.yaml (0.2) porque el control proporcional converge de forma
+# asintótica y puede no cruzar nunca un umbral más estricto.
+arrival_radius: 0.4
+
+# Tiempo (s) de pausa en cada waypoint antes de avanzar al siguiente.
+# Durante la pausa el comando de velocidad se fuerza a (0,0,0) pero la
+# política sigue en control (marcha en el lugar), no hay hand-off a un
+# controlador rígido.
+pause_duration: 3.0
+# destino: [4.0, -3.0]
+# Obstaculos que NO estan en el mapa (sorpresa): [x, y, medio_ancho_x, medio_ancho_y, medio_alto]
+# obstaculos: [[2.8, 0.0, 0.4, 0.4, 0.4]]
+slam: true
+pose_estimada: true
+explorar: true
+explorar_max_s: 400
+gyro_sesgo_grados_s: 0.0
+gyro_ruido_rad_s: 0.005
+corregir_rumbo: true
+alto_pared: 2.8
+cobertura: true
+inspeccionar: true
+inspeccion_max_s: 1200
+
+inspeccion_cobertura_objetivo: 80
+inspeccion_dist_max: 2.6
+inspeccion_tol_pos: 0.25
+inspeccion_t_quieto: 0.5
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# DETECTOR DE DANOS CON LA CNN (prueba integral): el veredicto de cada foto y de cada recorte lo da el modelo de deteccion del back
+# (los mismos pesos, temperatura y umbral que la app). En un escaneo real no se sabe de antemano donde estan los danos: no hay lista.
+detector_simulado: false
+detector_cnn: true
+detector_url: http://127.0.0.1:8010   # escaneos/prueba_integral/servidor_detector.py
+detector_grilla: [4, 3]
+detector_semilla: 0
+danos: []
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# INSPECCION FINA (paso 2): despues del barrido, el robot visita cada hallazgo, saca varias fotos y las manda al back con la posicion del DANO.
+inspeccion_fina: true
+fina_pasos: [general, cerca, izq, der]   # fotos por hallazgo, en orden (general: entero; cerca: lo mas cerca que deja el campo visual; izq/der: de costado)
+fina_enviar: [general, cerca, izq, der]  # cuales de esas fotos se mandan al back
+fina_angulo_grados: 30                   # angulo de las fotos de costado respecto de la perpendicular a la pared
+fina_cerca_m: 1.0                        # distancia minima de la foto de cerca (m); si el dano es alto, queda mas lejos (la camara no se inclina)
+fina_grilla: [8, 6]                      # con que grilla se afina DONDE esta el dano en la foto general y en la de cerca
+fina_recorte: true                       # recortar la foto alrededor del dano antes de mandarla (el back la achica a 224 x 224)
+fina_clasificar_en_back: false           # false: el back se usa tal cual esta (no se le manda ningun campo nuevo). true: manda 'clasificar_siempre', que solo sirve si el back lo tiene
+fina_max_s: 900                          # segundos de simulacion maximos para toda la inspeccion fina
+barrido_al_back: false                    # false: las fotos del barrido no se mandan al back (solo las de la inspeccion fina)
+
+# ---------------------------------------------------------------------------------------------------------------------------
+# PLANO Y RECORRIDO PARA EL FRONT: el front dibuja el mapa con las celdas de pared que manda el robot y el camino con su posicion.
+plano_al_back: false     # false: no se manda ni el mapa de paredes ni la posicion
+plano_cada_s: 5        # cada cuantos segundos de simulacion se vuelve a mandar el mapa de paredes mientras crece
+pose_al_back: false      # mandar la posicion del robot cada 0.5 s (el recorrido del front)

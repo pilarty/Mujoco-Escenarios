@@ -50,7 +50,7 @@ BACKEND_MISSION_URL = "http://127.0.0.1:8000/mission"
 BACKEND_MISSION_STATUS_URL = "http://127.0.0.1:8000/mission/status"
 LAT_BACKEND = []   # (segundos que tardo el back en contestar cada foto, codigo HTTP)
 # Escenario a cargar
-SCENARIO = "edificio_informe"
+SCENARIO = os.environ.get("G1_ESCENARIO", "edificio_informe")   # G1_ESCENARIO=escaneo_hospital carga un escaneo real
 # Version del robot: 29 (G1 de 29 DOF, politica original) o 23 (G1 EDU Standard, 23 DOF).
 # Por defecto es 23. Se puede cambiar con la variable de entorno G1_DOF (en PowerShell: $env:G1_DOF=29) o editando el 23 de abajo.
 # Cada version usa su propio MJCF (unitree_g1/scene.xml o scene_23dof.xml) y su propia carpeta de politica
@@ -62,7 +62,7 @@ _POLICY_DIR = "g1_navigation_integration/policy" if ROBOT_DOF == 29 else "g1_nav
 DEPLOY_YAML_PATH = f"{_POLICY_DIR}/deploy.yaml"
 POLICY_ONNX_PATH = f"{_POLICY_DIR}/policy.onnx"
 SCENE_XML = "scene.xml" if ROBOT_DOF == 29 else "scene_23dof.xml"
-NAV_CONFIG_PATH = "g1_nav_config.yaml"
+NAV_CONFIG_PATH = os.environ.get("G1_NAV_CONFIG", "g1_nav_config.yaml")
 
 # Directorios para capturas
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -229,6 +229,23 @@ def enviar_a_backend(registro, img_pil):
         print(f"  -> Captura enviada al backend (frame {registro['frame']}): respondio en {LAT_BACKEND[-1][0]:.2f} s (HTTP {resp.status_code})")
     except requests.exceptions.RequestException as e:
         print(f"  -> No se pudo enviar al backend ({e}). ¿Está corriendo uvicorn?")
+
+
+SIN_VENTANA = os.environ.get("G1_SIN_VENTANA") == "1"   # corre sin abrir la ventana de MuJoCo y sin esperar al reloj
+
+
+class _SinVentana:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def is_running(self):
+        return True
+
+    def sync(self):
+        pass
 
 
 def build_model():
@@ -552,6 +569,8 @@ def main():
         waypoints, L_mapa, lo_mapa = planificar_destino(destino)
 
     model, data = build_model()
+    if SCENARIO.startswith("escaneo_"):   # el piso del escaneo ya se ve: el piso cuadriculado de scene.xml sigue para pisar, pero invisible
+        model.mat_rgba[mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_MATERIAL, "groundplane")][3] = 0.0
     addr = resolve_joint_addresses(model)
     apply_pd_gains(model, addr, stiffness, damping)
     init_state(model, data, addr, default_joint_pos)
@@ -589,7 +608,10 @@ def main():
     ins = inspeccion.inspeccion_crear(cfg_nav)
     dn = danos.danos_crear(cfg_nav)   # detector de danos SIMULADO (el del back esta roto)
     if dn is not None:
-        print(f"[g1_nav] detector de danos simulado: {len(dn['reales'])} danos reales en el yaml, grilla {dn['grilla'][0]}x{dn['grilla'][1]}, prob. maxima {dn['p_max']}, falsos {dn['falsos']}")
+        if dn.get("cnn") is not None:
+            print(f"[g1_nav] detector de danos con la CNN del back ({dn['cnn']}), grilla {dn['grilla'][0]}x{dn['grilla'][1]}")
+        else:
+            print(f"[g1_nav] detector de danos simulado: {len(dn['reales'])} danos reales en el yaml, grilla {dn['grilla'][0]}x{dn['grilla'][1]}, prob. maxima {dn['p_max']}, falsos {dn['falsos']}")
     fi = fina.fina_crear(cfg_nav, dn, BACKEND_DETECTIONS_URL, REPORTE_IMAGENES_DIR)   # inspeccion fina de cada hallazgo (None si el yaml no tiene 'inspeccion_fina: true')
     if inspeccionando and not explorando:
         raise SystemExit("[g1_nav] 'inspeccionar: true' necesita 'explorar: true' (usa el mapa que arma la exploracion)")
@@ -648,7 +670,7 @@ def main():
     fallen_warned = False
     captured_at_waypoints = set()  # Para evitar capturas duplicadas en el mismo waypoint
 
-    with mujoco.viewer.launch_passive(model, data) as viewer:
+    with (_SinVentana() if SIN_VENTANA else mujoco.viewer.launch_passive(model, data)) as viewer:
         while viewer.is_running():
             base_pos, quat = get_base_pose(data, addr)
             quat_nav = quat   # la politica sigue recibiendo la orientacion real (IMU); solo la navegacion usa la estimada
@@ -717,6 +739,8 @@ def main():
                     threading.Thread(target=enviar_a_backend, args=(registro, img), daemon=True).start()
                 if foto_inspeccion:
                     _, depth_foto = rgbd_capture(data, rgbd_r)   # imagen de profundidad del mismo instante que la foto
+                    if dn is not None:
+                        dn["img"] = imagen   # para el detector con la CNN (detector_cnn: true)
                     fino = fina.fina_foto(fi, ins, sl, data, cam_id, lid["body_id"], depth_foto, f_cam, img, registro, dn)   # None si no es una foto de la inspeccion fina
                     if fino is not None:
                         print(f"[g1_nav] {fino}")
@@ -838,7 +862,8 @@ def main():
             t_next += control_dt
             resto = t_next - time.perf_counter()
             if resto > 0:
-                time.sleep(resto)
+                if not SIN_VENTANA:
+                    time.sleep(resto)
             else:
                 t_next = time.perf_counter()  # si se atrasa, no intenta recuperar de golpe
             t_iter = time.perf_counter()
