@@ -5,6 +5,7 @@ robot), no la del robot: es el dato que el front usa para senalar el dano. El ve
 (los 'types' de la respuesta) es el que se usa. Todo son funciones sobre un diccionario de estado."""
 import base64
 import io
+import os
 import math
 import threading
 import time
@@ -178,6 +179,7 @@ def _guardar_y_mandar(fi, act, x, y):
     for fo in act["fotos"]:
         if fo["paso"] not in fi["enviar"]:
             continue
+        fo["img"].save(os.path.join(fi["carpeta"], f"fina_h{act['h']['id']}_{fo['paso']}_{int(fo['frame']):06d}.png"))   # la misma foto que va al back
         buf = io.BytesIO()
         fo["img"].save(buf, format="PNG")
         payload = {"frame": int(fo["frame"]), "timestamp": float(fo["timestamp"]), "x": float(x), "y": float(y),

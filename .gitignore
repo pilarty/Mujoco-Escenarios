@@ -36,3 +36,4 @@ dataset_sim/danos_reales/*/
 dataset_sim/*.png
 escaneos/*
 !escaneos/resultados_pruebas/
+!escaneos/prueba_integral/
