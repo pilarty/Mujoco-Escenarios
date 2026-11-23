@@ -11,4 +11,7 @@ onnxruntime
 keyboard
 tensorflow
 requests
+pillow
+opencv-python
+pyyaml
 -r locomujoco.txt

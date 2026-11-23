@@ -16,6 +16,10 @@ import json
 import io
 import base64
 
+# los modulos del algoritmo viven en carpetas y se importan por nombre, igual que antes
+_RAIZ = os.path.dirname(os.path.abspath(__file__))
+for _carpeta in ("navegacion", "inspeccion_danos"):
+    sys.path.insert(0, os.path.join(_RAIZ, _carpeta))
 import mapa_vivo
 import localizacion
 import slam_vivo
@@ -23,8 +27,8 @@ import plano
 import exploracion
 import cobertura
 import inspeccion
-import danos
-import fina
+import detector_danos as danos
+import inspeccion_fina as fina
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -48,10 +52,10 @@ LAT_BACKEND = []   # (segundos que tardo el back en contestar cada foto, codigo 
 # Escenario a cargar
 SCENARIO = "edificio_informe"
 # Version del robot: 29 (G1 de 29 DOF, politica original) o 23 (G1 EDU Standard, 23 DOF).
-# Se elige con la variable de entorno G1_DOF (en PowerShell: $env:G1_DOF=23) o cambiando el 29 de abajo.
+# Por defecto es 23. Se puede cambiar con la variable de entorno G1_DOF (en PowerShell: $env:G1_DOF=29) o editando el 23 de abajo.
 # Cada version usa su propio MJCF (unitree_g1/scene.xml o scene_23dof.xml) y su propia carpeta de politica
 # (deploy.yaml + policy.onnx): g1_navigation_integration/policy o policy_23dof.
-ROBOT_DOF = int(os.environ.get("G1_DOF", "29"))
+ROBOT_DOF = int(os.environ.get("G1_DOF", "23"))
 if ROBOT_DOF not in (29, 23):
     raise SystemExit(f"G1_DOF tiene que ser 29 o 23 (vale {ROBOT_DOF})")
 _POLICY_DIR = "g1_navigation_integration/policy" if ROBOT_DOF == 29 else "g1_navigation_integration/policy_23dof"
@@ -66,6 +70,7 @@ REPORTE_DIR = os.path.join(PROJECT_ROOT, "simulaciones", "g1_saca_fotos", "repor
 REPORTE_IMAGENES_DIR = os.path.join(REPORTE_DIR, "images")
 CAPTURAS_JSON = os.path.join(REPORTE_DIR, "capturas.json")
 os.makedirs(REPORTE_IMAGENES_DIR, exist_ok=True)
+os.makedirs(os.path.join(PROJECT_ROOT, "mapas"), exist_ok=True)   # mapas/ no se versiona: se crea aca
 
 if os.path.exists(CAPTURAS_JSON):
     with open(CAPTURAS_JSON, "r", encoding="utf-8") as f:
@@ -152,7 +157,7 @@ def planificar_destino(destino):
         return "escenario" in m.files and str(m["escenario"]) == SCENARIO
     mapas = [f for f in sorted(glob.glob(os.path.join(PROJECT_ROOT, "mapas", "*_mapa_estimado.npz"))) if es_de_este_escenario(f)]
     if not mapas:
-        raise SystemExit(f"[g1_nav] no hay ningun mapa de {SCENARIO} en mapas/: graba una corrida y corre mapa_ocupacion.py y odometria_lidar.py")
+        raise SystemExit(f"[g1_nav] no hay ningun mapa de {SCENARIO} en mapas/: graba una corrida y corre navegacion/mapa_ocupacion.py y navegacion/odometria_lidar.py")
     L, lo, _ = planificador.cargar_mapa(mapas[-1])
     off = LIDAR_OFFSET[:2]   # el mapa tiene su origen en el LiDAR del primer barrido; el robot nace en (0,0) del mundo
     wp, _, msg = planificador.planificar(L, lo, -off, np.asarray(destino, dtype=float) - off)
@@ -708,7 +713,7 @@ def main():
                     "image": f"images/{nombre_imagen}",
                 }
                 guardar_captura(registro)
-                if not (foto_inspeccion and ins['vp'].get('fino')) and (not foto_inspeccion or cfg_nav.get('barrido_al_back', True)):   # las fotos de la inspeccion fina las manda fina.py, con la posicion del dano
+                if not (foto_inspeccion and ins['vp'].get('fino')) and (not foto_inspeccion or cfg_nav.get('barrido_al_back', True)):   # las fotos de la inspeccion fina las manda inspeccion_fina.py, con la posicion del dano
                     threading.Thread(target=enviar_a_backend, args=(registro, img), daemon=True).start()
                 if foto_inspeccion:
                     _, depth_foto = rgbd_capture(data, rgbd_r)   # imagen de profundidad del mismo instante que la foto

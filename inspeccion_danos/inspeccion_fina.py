@@ -12,7 +12,7 @@ import time
 import numpy as np
 import requests
 
-import danos
+import detector_danos as danos
 import exploracion
 import inspeccion
 import planificador

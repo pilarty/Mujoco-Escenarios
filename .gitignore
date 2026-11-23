@@ -21,6 +21,8 @@ training/imitation/
 training/smoke_test*.txt
 grabaciones/
 mapas/
+# registro acumulado de capturas: se agrega una entrada por foto en cada corrida (el launch lo crea si falta)
+simulaciones/g1_saca_fotos/reporte/capturas.json
 simulaciones/g1_saca_fotos/reporte/images/
 
 # edificio_informe: se regenera con descargar_texturas.py + generar_edificio.py

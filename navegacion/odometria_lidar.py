@@ -1,6 +1,6 @@
 """Estima el recorrido del robot SIN usar su posicion real: giroscopio (rumbo) + LiDAR (desplazamiento).
 La posicion real solo se usa al final, para medir el error.
-Uso:  python odometria_lidar.py [grabaciones/corrida_X.npz]   (sin argumento usa la ultima)"""
+Uso:  python navegacion/odometria_lidar.py [grabaciones/corrida_X.npz]   (sin argumento usa la ultima)"""
 import glob
 import json
 import os
@@ -110,7 +110,7 @@ def recorrido_real(d, cal):
 
 
 def main():
-    raiz = os.path.dirname(os.path.abspath(__file__))
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ruta = sys.argv[1] if len(sys.argv) > 1 else sorted(glob.glob(os.path.join(raiz, "grabaciones", "*.npz")))[-1]
     d = np.load(ruta)
     d = {k: d[k] for k in d.files}

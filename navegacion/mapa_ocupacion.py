@@ -1,5 +1,5 @@
 """Mapa de ocupacion 2D a partir de una corrida grabada (grabaciones/*.npz) usando la pose REAL del robot.
-Uso:  python mapa_ocupacion.py [grabaciones/corrida_X.npz]   (sin argumento usa la ultima)
+Uso:  python navegacion/mapa_ocupacion.py [grabaciones/corrida_X.npz]   (sin argumento usa la ultima)
 Solo depende del .npz y de sensores.json: no lee el escenario."""
 import glob
 import json
@@ -89,7 +89,7 @@ def dibujar(L, lo, trayecto, waypoints, ruta_png, px_por_m=40, trayecto_ref=None
 
 
 def main():
-    raiz = os.path.dirname(os.path.abspath(__file__))
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ruta = sys.argv[1] if len(sys.argv) > 1 else sorted(glob.glob(os.path.join(raiz, "grabaciones", "*.npz")))[-1]
     d = np.load(ruta)
     d = {k: d[k] for k in d.files}

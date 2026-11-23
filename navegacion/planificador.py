@@ -1,5 +1,5 @@
 """Planifica una ruta sobre un mapa de ocupacion (mapas/*_mapa_estimado.npz) hasta un destino (x, y).
-Uso:  python planificador.py X Y [X0 Y0] [mapa.npz]     (inicio por defecto: 0 0; sin mapa usa el ultimo)
+Uso:  python navegacion/planificador.py X Y [X0 Y0] [mapa.npz]     (inicio por defecto: 0 0; sin mapa usa el ultimo)
 Las coordenadas son del marco del mapa: origen en donde arranco el robot, x hacia adelante.
 Imprime la linea 'waypoints: [...]' lista para g1_nav_config.yaml y guarda una imagen en mapas/."""
 import glob
@@ -22,7 +22,7 @@ TRAMO_MAX = 2.0         # m: largo maximo de cada tramo recto entre waypoints
 def cargar_mapa(ruta):
     m = np.load(ruta)
     if "logodds" not in m.files:
-        sys.exit("[planificador] ese .npz es de una version vieja (solo tiene posiciones): volve a correr odometria_lidar.py")
+        sys.exit("[planificador] ese .npz es de una version vieja (solo tiene posiciones): volve a correr navegacion/odometria_lidar.py")
     return m["logodds"], m["origen_xy"], float(m["resolucion"])
 
 
@@ -143,12 +143,12 @@ def planificar(L, lo, inicio, destino, casco=False):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.endswith(".npz")]
-    raiz = os.path.dirname(os.path.abspath(__file__))
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ruta_mapa = next((a for a in sys.argv[1:] if a.endswith(".npz")), None)
     if ruta_mapa is None:
         ruta_mapa = sorted(glob.glob(os.path.join(raiz, "mapas", "*_mapa_estimado.npz")))[-1]
     if len(args) not in (2, 4):
-        sys.exit("uso: python planificador.py X Y [X0 Y0] [mapa.npz]")
+        sys.exit("uso: python navegacion/planificador.py X Y [X0 Y0] [mapa.npz]")
     destino = np.array([float(args[0]), float(args[1])])
     inicio = np.array([float(args[2]), float(args[3])]) if len(args) == 4 else np.zeros(2)
     L, lo, _ = cargar_mapa(ruta_mapa)
